@@ -20,22 +20,22 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
     fv.search(filters=searchFilters, sort_by='country')
     
 This returns a .json file called data.json, which contains a brief overview of the filtered options and looks like this:
-
-    {
-    "1": {
-        "Industry": "Electronic Equipment", 
-        "Country": "USA", 
-        "Ticker": "AAPL", 
+      
+     {
+        "1": {
+        "Price": "6.58", 
+        "Company": "Diana Containerships Inc.", 
+        "Volume": "377,492", 
+        "Change": "-1.79%", 
+        "P/E": "-", 
+        "Ticker": "DCIX", 
         "Number": "1", 
-        "Market Cap": "874.12B", 
-        "P/E": "18.40", 
-        "Sector": "Consumer Goods", 
-        "Price": "171.55", 
-        "Change": "1.46%", 
-        "Volume": "14,161,642", 
-        "Company": "Apple Inc."
-        }
-    }
+        "Industry": "Shipping", 
+        "Country": "Greece", 
+        "Sector": "Services", 
+        "Market Cap": "5.09M"
+    }, 
+        "2" ...
 
 The search() function takes exactly 4 arguments:
 * (list) **tickers**
