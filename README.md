@@ -50,4 +50,5 @@ You can find each filter arguments by executing a search on the website itself, 
 
 - Limit the quantity of results saved from screener()
 - Add CSV and SQL support
+- Obtain information from the homepage
 - Scrape data from individual symbol page
