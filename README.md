@@ -49,5 +49,5 @@ You can find each filter arguments by executing a search on the website itself, 
 ### To do's:
 
 - Limit the quantity of results saved from screener()
-- Add SQL support
+- Add CSV and SQL support
 - Scrape data from individual symbol page
