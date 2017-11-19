@@ -2,9 +2,9 @@
 
 `finviz-api` is compatible with Python 3 only 
 
-**What is finviz?**
+**What is Finviz?**
 
-Finviz aims to make market information accessible and provides a lot of data in visual snapshots, allowing traders and investors to quickly find the stock, future or forex pair they are looking for. The site provides advanced screeners, market maps, analysis, comparative tools and charts.
+[Finviz.com](http://www.finviz.com) aims to make market information accessible and provides a lot of data in visual snapshots, allowing traders and investors to quickly find the stock, future or forex pair they are looking for. The site provides advanced screeners, market maps, analysis, comparative tools and charts.
 
 ### Installation
 
@@ -45,13 +45,10 @@ Below, you can see all of the possible arguments that can be passed through scre
 | save_as | string | 'csv' | 'csv' |
 | quantity | int | 50 | 20 |
 
-### Performance
+### Notes on performance
 
-As of the latest update, after trial and error, I'll stop attempting to improve the performance of the scraper. Each command takes around 4 seconds to execute, and I've come to the conclusion that CPU performance is not the bottleneck here, but the internet speed. That means the time to complete each request to screener() will vary on your download speed.
+The API uses various modules to obtain and format data, thus resulting in a slight decrease of performance. Although that is barely noticable, the bottleneck will be partly, if not entirely based on your internet speed. After the last update I've come to the conclusion to stop optimizing the scraping algorithm and focus on data storage. 
 
 ### To do's:
 
-- Limit the quantity of results saved from screener()
-- Add CSV and SQL support
-- Obtain information from the homepage
-- Scrape data from individual symbol page
+Recently I've settled with an issue regarding using JSON files to store data. I decided that the JSON format is not the corrent database to store this type of information (talking about the screener here). Furthermore, continuing to add new features to the API I'll open mindedly research various types of databases, while looking to implement JSON support. 
