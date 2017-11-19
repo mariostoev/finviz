@@ -46,6 +46,10 @@ You can find each filter arguments by executing a search on the website itself, 
 - (string) **sort_by**
 - (int) **quantity** *(50 by default, and currently not implemented)*
 
+### Performance
+
+As of the latest update, after trial and error, I'll stop attempting to improve the performance of the scraper. Each command takes around 4 seconds to execute, and I've come to the conclusion that CPU performance is not the bottleneck here, but the internet speed. That means the time to complete each request to screener() will vary on your download speed.
+
 ### To do's:
 
 - Limit the quantity of results saved from screener()
