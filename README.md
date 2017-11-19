@@ -1,50 +1,49 @@
-### Unofficial API for [finviz.com](http://finviz.com)
+## finviz-api
 
-This project is in *active* development as of 11/15/2017
+`finviz-api` is compatible with Python 3 only 
 
-> **What is finviz?**
->
-> Finviz is a stock market protal that provides traders with superior and detailed financial analysis, research, and data visualization.
+**What is finviz?**
+
+Finviz aims to make market information accessible and provides a lot of data in visual snapshots, allowing traders and investors to quickly find the stock, future or forex pair they are looking for. The site provides advanced screeners, market maps, analysis, comparative tools and charts.
+
+### Installation
+
+Install the current PyPi release by:
+
+`pip install finviz`
+
+Or install the development version from GitHub:
+
+`pip install git+https://github.com/mariostoev/finviz-api`
 
 ### Important information
 
 Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and 20 minutes for NYSE and AMEX. This API should **NOT** be used for live trading, it's main purpuse is financial analysis, research and data scraping.
 
-### Using the screener
+### Using screener()
 
-    import public
+    from finviz import screener
     
-    fv = public.Finviz()
+    tickers = ['AAPL', 'ATVI', 'TSLA']
+    filters = ['exch_nasd', 'cap_large']  # Shows companies in NASDAQ with Market Cap from $10bln. to $200bln.
+    order = '-price'  # Orders the results by price descending
     
-    searchFilters = ['cap_microunder', 'earningsdate_tomorrow', 'exch_nasd']    
-    fv.search(filters=searchFilters, sort_by='country')
+    screener(tickers, filters, order)
     
-This returns a .json file called data.json, which contains a brief overview of the filtered options and looks like this:
-      
-     {
-        "1": {
-        "Price": "6.58", 
-        "Company": "Diana Containerships Inc.", 
-        "Volume": "377,492", 
-        "Change": "-1.79%", 
-        "P/E": "-", 
-        "Ticker": "DCIX", 
-        "Number": "1", 
-        "Industry": "Shipping", 
-        "Country": "Greece", 
-        "Sector": "Services", 
-        "Market Cap": "5.09M"
-    }, 
-        "2" ...
+    # Returns a data.csv file containing the data from the screener
 
-The search() function takes exactly 4 arguments:
-* (list) **tickers**
-* (list) **filters**
+Below, you can see all of the possible arguments that can be passed through screener():
 
-You can find each filter arguments by executing a search on the website itself, while I find an easier solution
-
-- (string) **sort_by**
-- (int) **quantity** *(50 by default, and currently not implemented)*
+| Argument | Type | Example | Default |
+| :---         |     :---:      |     :---:     |     :---:     |
+| tickers  | list | ['AAPL', 'ATVI', 'TSLA']  | None |
+| filters | list | ['exch_nasd', 'cap_large']  | None |
+| order | string | '-price' | None |
+| signal | string | 'ta_topgainers' | None |
+| dir | string | 'C:/User/Desktop' | os.getcwd() |
+| table | string | 'Performance' | 'Overview' |
+| save_as | string | 'csv' | 'csv' |
+| quantity | int | 50 | 20 |
 
 ### Performance
 
