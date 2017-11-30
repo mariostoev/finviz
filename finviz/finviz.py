@@ -6,16 +6,14 @@ import requests
 import os
 
 TABLE = {
-    'Overview': '110,0',
-    'Valuation': '120,1',
-    'Ownership': '130,2',
-    'Performance': '140,3',
-    'Custom': '150,4',
-    'Financial': '160,5',
-    'Technical': '170,6'
+    'Overview': ['110', 0],
+    'Valuation': ['120', 1],
+    'Ownership': ['130', 2],
+    'Performance': ['140', 3],
+    'Custom': ['150', 4],
+    'Financial': ['160', 5],
+    'Technical': ['170', 7]
 }
-
-DATA = {}
 
 
 def httprequest(payload):
@@ -25,18 +23,19 @@ def httprequest(payload):
 
     return request.url
 
+
 def screener(tickers=[], filters=[], order='',
-            signal='', dir=os.getcwd(), table='Overview',
-            quantity=20):
+             signal='', todir=os.getcwd(), table='Overview',
+             export='sql', quantity=20):
 
     """
-    With given specefic filters, screener() scrapes table data
+    With given specific filters, screener() scrapes table data
     from Finviz and creates a file containing all of
     the information.
     """
 
     payload = {
-        'v': TABLE[table].split(',')[0],  # Overview search
+        'v': TABLE[table][0],  # Overview search
         't': ','.join(tickers),
         'f': ','.join(filters),
         'o': order,
@@ -47,19 +46,15 @@ def screener(tickers=[], filters=[], order='',
     html = urllib.request.Request(requestUrl)
     content = urlopen(html).read()
     pageContent = BeautifulSoup(content, 'html.parser')
+    pageContent.find('table', {'bgcolor': 'd3d3d3'})
 
-    for bodyContent in pageContent('table', {'bgcolor': '#d3d3d3'}):
-        for row in bodyContent.findAll('tr')[1:]:
-            data = []
-            for href in row.findAll('a'):
-                data.append(href.Text)
-                print(href.text)
+    headers = [i for i in table_format[TABLE[table][1]]]
+    datasets = []
 
-                if len(data) == len(table_format[int(TABLE[table].split(',')[1])]):
-                    print('=======')
+    for row in pageContent.findAll('tr', {'valign': 'top'})[1:]:
+        values = dict(zip(headers, (href.text for href in row.findAll('a'))))
+        datasets.append(values)
 
+    print(datasets)
 
-
-
-
-screener()
+screener(filters=['cap_microunder' , 'exch_nasd' , 'sh_avgvol_u50' , 'sh_relvol_o2'])
