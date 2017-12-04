@@ -8,7 +8,7 @@
 
 ### Installation
 
-Install the current PyPi release by:
+Install the current PyPi release by: (not working currently)
 
 `pip install finviz`
 
