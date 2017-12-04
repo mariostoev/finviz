@@ -27,8 +27,9 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
     tickers = ['AAPL', 'ATVI', 'TSLA']
     filters = ['exch_nasd', 'cap_large']  # Shows companies in NASDAQ with Market Cap from $10bln. to $200bln.
     order = '-price'  # Orders the results by price descending
+    elements = 100  # Scrape the first 100 elements only
     
-    screener(tickers, filters, order)
+    screener(tickers, filters, order, quantity=elements)
     
     # Returns a data.csv file containing the data from the screener
 
@@ -45,10 +46,9 @@ Below, you can see all of the possible arguments that can be passed through scre
 | save_as | string | 'csv' | 'csv' |
 | quantity | int | 50 | 20 |
 
-### Notes on performance
-
-The API uses various modules to obtain and format data, thus resulting in a slight decrease of performance. Although that is barely noticable, the bottleneck will be partly, if not entirely based on your internet speed. After the last update I've come to the conclusion to stop optimizing the scraping algorithm and focus on data storage. 
-
 ### To do's:
 
-Recently I've settled with an issue regarding using JSON files to store data. I decided that the JSON format is not the corrent database to store this type of information (talking about the screener here). Furthermore, continuing to add new features to the API I'll open mindedly research various types of databases, while looking to implement JSON support. 
+- Use only aiohttp to make requests
+- Remove warnings (unclosed connections)
+- Add CSV, SQL and JSON support
+- Integrate function to scrape each symbol individually
