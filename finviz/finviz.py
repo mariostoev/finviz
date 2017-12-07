@@ -1,5 +1,5 @@
 from urllib.request import urlopen
-from bs4 import BeautifulSoup
+from lxml import html
 from table_format import table_format
 import asyncio
 import aiohttp
@@ -53,16 +53,17 @@ def pages_headers(url, quantity, table):
     """
 
     pageContent = parse(url)
+    headers = [i for i in table_format[TABLE[table][1]]]
+
     try:
-        headers = [i for i in table_format[TABLE[table][1]]]
-        total_pages = int(pageContent.find('option', {'value': '1'}).text.split('/')[1])
+        total_pages = int([i.text.split('/')[1] for i in pageContent.cssselect('option[value="1"]')][0])
     except AttributeError:  # No results found
         return None
 
     URLS = []
     # Using basic level arithmetic sequence to fetch urls
     for i in range(1, total_pages + 1):
-        sequence = 1 + (i - 1)*20
+        sequence = 1 + (i - 1) * 20
         if sequence - 20 <= quantity <= sequence:  # PROBLEM WITH QUANTITY = 1
             break
         else:
@@ -77,20 +78,30 @@ def get_data(html, headers, quantity):
     Iterates over the screener's table and saves each
     row's data into a dictionary.
     """
-
-    pageContent = BeautifulSoup(html, 'html.parser')
-    pageContent.find('table', {'bgcolor': 'd3d3d3'})
+    
     datasets = []
+    pageContent = html.fromstring(content)
+    all_rows = [i.cssselect('a') for i in pageContent.cssselect('tr[valign="top"]')[1:]]
 
-    for row in pageContent.findAll('tr', {'valign': 'top'})[1:]:
-        end_element = int(row.find('a').text)
+    def parse_row(row):
+        row_data = []
 
-        if end_element == quantity:
-            values = dict(zip(headers, (href.text for href in row.findAll('a'))))
+        for tags in row:
+            if tags.text is not None:
+                row_data.append(tags.text)
+            else:
+                for span in tags.cssselect('span'):
+                    row_data.append(span.text)
+
+        return row_data
+
+    for row in all_rows:
+        if int(row[0].text) is quantity:
+            values = dict(zip(table_format[0], parse_row(row)))
             datasets.append(values)
             break
         else:
-            values = dict(zip(headers, (href.text for href in row.findAll('a'))))
+            values = dict(zip(table_format[0], parse_row(row)))
             datasets.append(values)
 
     return datasets
