@@ -45,7 +45,7 @@ def httprequest(payload):
     return request.url
 
 
-def pages_headers(url, quantity, table):
+def page(url, quantity):
 
     """
     Returns a list with the URL's of the all pages and
@@ -125,16 +125,17 @@ def screener(tickers=[], filters=[], order='',
         's': signal
     }
 
-    URLS, headers = pages_headers(http_request(payload), quantity, table)
+    headers = [i for i in table_format[TABLE[table][1]]]
+    URLS = page(http_request(payload), quantity)
     DATA = []
 
-    @asyncio.coroutine
-    def get_page(url):
+    async def get_page(url):
+        session = aiohttp.ClientSession()
         response = yield from aiohttp.request('GET', url, compress=True)
+        session.close()
         return (yield from response.text())
 
-    @asyncio.coroutine
-    def print_data(url, headers, quantity):
+    async def print_data(url, headers, quantity):
         page = yield from get_page(url)
         data = get_data(page, headers, quantity)
         DATA.append(data)
