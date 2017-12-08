@@ -69,7 +69,7 @@ def page(url, quantity):
         else:
             URLS.append(url + '&r={}'.format(str(sequence)))
 
-    return URLS, headers
+    return URLS
 
 
 def parse_row(row):
