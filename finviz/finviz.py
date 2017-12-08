@@ -26,7 +26,7 @@ def parse(url):
 
     request = urllib.request.Request(url)
     html = urlopen(request).read()
-    pageContent = BeautifulSoup(html, 'html.parser')
+    pageContent = html.fromstring(content)
 
     return pageContent
 
@@ -72,6 +72,23 @@ def page(url, quantity):
     return URLS, headers
 
 
+def parse_row(row):
+
+    """
+    Scrapes each element in a row
+    """
+
+    row_data = []
+
+    for tags in row:
+        if tags.text is not None:
+            row_data.append(tags.text)
+        else:
+            row_data.append([span.text for span in tags.cssselect('span')][0])
+
+    return row_data
+
+
 def get_data(html, headers, quantity):
 
     """
@@ -82,18 +99,6 @@ def get_data(html, headers, quantity):
     datasets = []
     pageContent = html.fromstring(content)
     all_rows = [i.cssselect('a') for i in pageContent.cssselect('tr[valign="top"]')[1:]]
-
-    def parse_row(row):
-        row_data = []
-
-        for tags in row:
-            if tags.text is not None:
-                row_data.append(tags.text)
-            else:
-                for span in tags.cssselect('span'):
-                    row_data.append(span.text)
-
-        return row_data
 
     for row in all_rows:
         if int(row[0].text) is quantity:
