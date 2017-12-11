@@ -53,7 +53,6 @@ def page(url, quantity):
     """
 
     pageContent = parse(url)
-    headers = [i for i in table_format[TABLE[table][1]]]
 
     try:
         total_pages = int([i.text.split('/')[1] for i in pageContent.cssselect('option[value="1"]')][0])
@@ -64,7 +63,7 @@ def page(url, quantity):
     # Using basic level arithmetic sequence to fetch urls
     for i in range(1, total_pages + 1):
         sequence = 1 + (i - 1) * 20
-        if sequence - 20 <= quantity <= sequence:  # PROBLEM WITH QUANTITY = 1
+        if sequence - 20 <= quantity < sequence:  # PROBLEM WITH QUANTITY = 1
             break
         else:
             URLS.append(url + '&r={}'.format(str(sequence)))
