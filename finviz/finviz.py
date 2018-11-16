@@ -178,7 +178,3 @@ class Screener(object):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.__async_scraper())
-
-
-Scraper = Screener(filters=['earningsdate_thismonth' ,'exch_nasd' ,'idx_sp500'], table='Overview')
-Scraper.to_csv()
