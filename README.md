@@ -1,39 +1,30 @@
 ## finviz-api
 
-`finviz-api` is compatible with Python 3 only 
+`finviz-api` is compatible with Python 3.6+ only 
 
 **What is Finviz?**
 
 [Finviz.com](http://www.finviz.com) aims to make market information accessible and provides a lot of data in visual snapshots, allowing traders and investors to quickly find the stock, future or forex pair they are looking for. The site provides advanced screeners, market maps, analysis, comparative tools and charts.
 
-### Installation
-
-Install the current PyPi release by: (not working currently)
-
-`pip install finviz`
-
-Or install the development version from GitHub:
-
-`pip install git+https://github.com/mariostoev/finviz-api`
-
 ### Important information
 
 Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and 20 minutes for NYSE and AMEX. This API should **NOT** be used for live trading, it's main purpuse is financial analysis, research and data scraping.
 
-### Using screener()
+### Using Screener()
 
-    from finviz import screener
+    from finviz import Screener
     
     tickers = ['AAPL', 'ATVI', 'TSLA']
     filters = ['exch_nasd', 'cap_large']  # Shows companies in NASDAQ with Market Cap from $10bln. to $200bln.
     order = '-price'  # Orders the results by price descending
-    elements = 100  # Scrape the first 100 elements only
+    rows = 100  # Scrape the first 100 elements only
     
-    screener(tickers, filters, order, quantity=elements)
+    Screener(tickers, filters, order, quantity=elements)
+    Screener.to_csv()
     
-    # Returns a data.csv file containing the data from the screener
+    # Creates screener_results.csv file in the current directory
 
-Below, you can see all of the possible arguments that can be passed through screener():
+Below, you can see all of the possible arguments that can be passed through Screener():
 
 | Argument | Type | Example | Default |
 | :---         |     :---:      |     :---:     |     :---:     |
@@ -41,14 +32,7 @@ Below, you can see all of the possible arguments that can be passed through scre
 | filters | list | ['exch_nasd', 'cap_large']  | None |
 | order | string | '-price' | None |
 | signal | string | 'ta_topgainers' | None |
-| dir | string | 'C:/User/Desktop' | os.getcwd() |
+| dir | string | 'C:/User/Desktop/data' | Current Directory |
 | table | string | 'Performance' | 'Overview' |
 | save_as | string | 'csv' | 'csv' |
-| quantity | int | 50 | 20 |
-
-### To do's:
-
-- Use only aiohttp to make requests
-- Remove warnings (unclosed connections)
-- Add CSV, SQL and JSON support
-- Integrate function to scrape each symbol individually
+| rows | int | 43 | Maximum |
