@@ -17,9 +17,8 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
     tickers = ['AAPL', 'ATVI', 'TSLA']
     filters = ['exch_nasd', 'cap_large']  # Shows companies in NASDAQ with Market Cap from $10bln. to $200bln.
     order = '-price'  # Orders the results by price descending
-    rows = 37  # Collects the first 37 rows
     
-    Screener(tickers, filters, order, quantity=elements)
+    Screener(tickers, filters, order, rows=37)
     Screener.to_csv()
     
     # Creates screener_results.csv file in the current directory
