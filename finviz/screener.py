@@ -76,7 +76,7 @@ class Screener(object):
 
     def write_to_db(self):
         field_list = ""
-        table_name = 'screener_results'  # name of the table to be created
+        table_name = "screener_results"  # name of the table to be created
         conn = create_connection()
         c = conn.cursor()
 
@@ -86,7 +86,8 @@ class Screener(object):
             field_list +=  field_cleaned + " TEXT, "
         # Creating a new SQLite if it does not exist
 
-        c.execute("CREATE TABLE IF NOT EXISTS {tn} ({fl})".format(tn=table_name, fl=field_list[:-2]))
+        c.execute("CREATE TABLE IF NOT EXISTS {tn} ({fl})"\
+        .format(tn=table_name, fl=field_list[:-2]))
 
         for data in self.data:
             insert_lines = ""
