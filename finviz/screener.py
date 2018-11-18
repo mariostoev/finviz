@@ -1,6 +1,7 @@
-from finviz.async_connector import Connector
 from lxml import html
 from lxml import etree
+import finviz.request_functions as send
+import finviz.scraper_functions as scrape
 import requests
 import urllib3
 import os
@@ -27,6 +28,7 @@ def http_request(url, payload=None):
     content.raise_for_status()  # Raise HTTPError for bad requests (4xx or 5xx)
 
     return content, content.url
+
 
 
 class Screener(object):
@@ -57,6 +59,8 @@ class Screener(object):
 
     def to_csv(self, directory=None):
         if directory is None:
+
+            import os
             directory = os.getcwd()
 
         export_to_csv(self.headers, self.data, directory)
@@ -140,27 +144,33 @@ class Screener(object):
 
     def __search_screener(self):
 
+        table = {
+            'Overview': '110',
+            'Valuation': '120',
+            'Ownership': '130',
+            'Performance': '140',
+            'Custom': '150',
+            'Financial': '160',
+            'Technical': '170'
+        }
+
         payload = {
-            'v': TABLE[self.table],
+            'v': table[self.table],
             't': ','.join(self.tickers),
             'f': ','.join(self.filters),
             'o': self.order,
             's': self.signal
         }
 
-        self.page_content, self.url = http_request('https://finviz.com/screener.ashx', payload)
+        self.page_content, self.url = send.http_request('https://finviz.com/screener.ashx', payload)
         self.page_content = html.fromstring(self.page_content.text)  # Parses the page with the default lxml parser
 
         self.__get_table_headers()
 
         if self.rows is None:
-            self.__get_total_rows()
+            self.rows = scrape.get_total_rows(self.page_content)
 
-        self.__get_page_urls()
+        self.page_urls = scrape.get_page_urls(self.page_content, self.rows, self.url)
 
-        if self.page_urls is None:
-            raise Exception("No results matching the criteria: {}"
-                            .format(self.url.split('?', 1)[1]))
-
-        async_connector = Connector(self.__get_table_data, self.page_urls)
+        async_connector = send.Connector(self.__get_table_data, self.page_urls)
         self.data = async_connector.run_connector()
