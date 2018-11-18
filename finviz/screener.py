@@ -4,8 +4,7 @@ from lxml import etree
 import requests
 import urllib3
 import os
-import sqlite3
-import re
+from .save_data import export_to_csv, export_to_db, select_from_db
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -18,15 +17,6 @@ TABLE = {
     'Financial': '160',
     'Technical': '170'
 }
-
-def create_connection():
-    sqlite_file = "../screener.sqlite"
-    try:
-        conn = sqlite3.connect(sqlite_file)
-        return conn
-    except:
-        print("Error connecting to DB")
-        return None
 
 def http_request(url, payload=None):
 
@@ -66,56 +56,16 @@ class Screener(object):
         self.__search_screener()
 
     def to_csv(self, directory=None):
-
-        from .save_data import export_to_csv
-
         if directory is None:
             directory = os.getcwd()
 
         export_to_csv(self.headers, self.data, directory)
 
-    def write_to_db(self):
-        field_list = ""
-        table_name = "screener_results"  # name of the table to be created
-        conn = create_connection()
-        c = conn.cursor()
+    def to_db(self):
+        export_to_db(self.headers, self.data)
 
-        for field in self.headers:
-            field_cleaned = re.sub(r'[^\w\s]','',field)
-            field_cleaned = field_cleaned.replace(" ", "")
-            field_list +=  field_cleaned + " TEXT, "
-        # Creating a new SQLite if it does not exist
-
-        c.execute("CREATE TABLE IF NOT EXISTS {tn} ({fl})"\
-        .format(tn=table_name, fl=field_list[:-2]))
-
-        for data in self.data:
-            insert_lines = ""
-            for level in data:
-                insert_line = "("
-                for field, value in level.items():
-                    insert_line += "\"" +  value + "\", "
-                insert_lines += insert_line[:-2]+")" + ","
-            insert_lines += insert_lines [:-1]
-
-        try:
-            c.execute("INSERT INTO {tn} VALUES {iv}".\
-            format(tn=table_name, iv=insert_lines))
-        except:
-            print("ERROR: INSERT FAILED")
-
-        conn.commit()
-        conn.close()
-
-    def select_from_db(self):
-        conn = create_connection()
-        c = conn.cursor()
-        c.execute("SELECT * FROM screener_results")
-
-        rows = c.fetchall()
-
-        for row in rows:
-            print(row)
+    def from_db(self):
+        select_from_db()
 
     def __get_total_rows(self):
 
