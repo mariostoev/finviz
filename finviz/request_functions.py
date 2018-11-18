@@ -1,5 +1,20 @@
 import asyncio
 import aiohttp
+import requests
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+def http_request(url, payload=None):
+
+    if payload is None:
+        payload = {}
+
+    content = requests.get(url, params=payload, verify=False)
+    content.raise_for_status()  # Raise HTTPError for bad requests (4xx or 5xx)
+
+    return content, content.url
 
 
 class Connector(object):

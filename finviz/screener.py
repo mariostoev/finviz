@@ -1,32 +1,7 @@
-from finviz.async_connector import Connector
 from lxml import html
 from lxml import etree
-import requests
-import urllib3
-import os
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-TABLE = {
-    'Overview': '110',
-    'Valuation': '120',
-    'Ownership': '130',
-    'Performance': '140',
-    'Custom': '150',
-    'Financial': '160',
-    'Technical': '170'
-}
-
-
-def http_request(url, payload=None):
-
-    if payload is None:
-        payload = {}
-
-    content = requests.get(url, params=payload, verify=False)
-    content.raise_for_status()  # Raise HTTPError for bad requests (4xx or 5xx)
-
-    return content, content.url
+import finviz.request_functions as send
+import finviz.scraper_functions as scrape
 
 
 class Screener(object):
@@ -57,37 +32,14 @@ class Screener(object):
 
     def to_csv(self, directory=None):
 
-        from save_data import export_to_csv
+        from .save_data import export_to_csv
 
         if directory is None:
+
+            import os
             directory = os.getcwd()
 
         export_to_csv(self.headers, self.data, directory)
-
-    def __get_total_rows(self):
-
-        total_element = self.page_content.cssselect('td[width="140"]')
-        self.rows = int(etree.tostring(total_element[0]).decode("utf-8").split('</b>')[1].split(' ')[0])
-
-    def __get_page_urls(self):
-
-        try:
-            total_pages = int([i.text.split('/')[1] for i in self.page_content.cssselect('option[value="1"]')][0])
-        except IndexError:  # No results found
-            return None
-
-        urls = []
-
-        for page_number in range(1, total_pages + 1):
-
-            sequence = 1 + (page_number - 1) * 20
-
-            if sequence - 20 <= self.rows < sequence:
-                break
-            else:
-                urls.append(self.url + '&r={}'.format(str(sequence)))
-
-        self.page_urls = urls
 
     def __get_table_headers(self):
 
@@ -137,27 +89,33 @@ class Screener(object):
 
     def __search_screener(self):
 
+        table = {
+            'Overview': '110',
+            'Valuation': '120',
+            'Ownership': '130',
+            'Performance': '140',
+            'Custom': '150',
+            'Financial': '160',
+            'Technical': '170'
+        }
+
         payload = {
-            'v': TABLE[self.table],
+            'v': table[self.table],
             't': ','.join(self.tickers),
             'f': ','.join(self.filters),
             'o': self.order,
             's': self.signal
         }
 
-        self.page_content, self.url = http_request('https://finviz.com/screener.ashx', payload)
+        self.page_content, self.url = send.http_request('https://finviz.com/screener.ashx', payload)
         self.page_content = html.fromstring(self.page_content.text)  # Parses the page with the default lxml parser
 
         self.__get_table_headers()
 
         if self.rows is None:
-            self.__get_total_rows()
+            self.rows = scrape.get_total_rows(self.page_content)
 
-        self.__get_page_urls()
+        self.page_urls = scrape.get_page_urls(self.page_content, self.rows, self.url)
 
-        if self.page_urls is None:
-            raise Exception("No results matching the criteria: {}"
-                            .format(self.url.split('?', 1)[1]))
-
-        async_connector = Connector(self.__get_table_data, self.page_urls)
+        async_connector = send.Connector(self.__get_table_data, self.page_urls)
         self.data = async_connector.run_connector()
