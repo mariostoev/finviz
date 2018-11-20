@@ -2,11 +2,15 @@ from lxml import html
 from lxml import etree
 import finviz.request_functions as send
 import finviz.scraper_functions as scrape
+import requests
+import urllib3
+import os
+from .save_data import export_to_csv, export_to_db, select_from_db
 
 
 class Screener(object):
 
-    def __init__(self, tickers=None, filters=None, rows=None, order='', signal='', table='Overview'):
+    def __init__(self, tickers=None, filters=None, order='', rows=None, signal='', table='Overview'):
 
         if tickers is None:
             self.tickers = []
@@ -32,14 +36,43 @@ class Screener(object):
 
     def to_csv(self, directory=None):
 
-        from .save_data import export_to_csv
-
         if directory is None:
 
             import os
             directory = os.getcwd()
 
         export_to_csv(self.headers, self.data, directory)
+
+    def to_db(self):
+        export_to_db(self.headers, self.data)
+
+    def from_db(self):
+        select_from_db()
+
+    def __get_total_rows(self):
+
+        total_element = self.page_content.cssselect('td[width="140"]')
+        self.rows = int(etree.tostring(total_element[0]).decode("utf-8").split('</b>')[1].split(' ')[0])
+
+    def __get_page_urls(self):
+
+        try:
+            total_pages = int([i.text.split('/')[1] for i in self.page_content.cssselect('option[value="1"]')][0])
+        except IndexError:  # No results found
+            return None
+
+        urls = []
+
+        for page_number in range(1, total_pages + 1):
+
+            sequence = 1 + (page_number - 1) * 20
+
+            if sequence - 20 <= self.rows < sequence:
+                break
+            else:
+                urls.append(self.url + '&r={}'.format(str(sequence)))
+
+        self.page_urls = urls
 
     def __get_table_headers(self):
 
