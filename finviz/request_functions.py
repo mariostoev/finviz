@@ -30,16 +30,16 @@ class Connector(object):
         async with session.get(url) as response:
             page_html = await response.read()
 
-            return self.scrape_function(page_html)
+            return self.scrape_function(page_html, url)
 
     async def __async_scraper(self):
 
-        tasks = []
+        async_tasks = []
         async with aiohttp.ClientSession() as session:
             for n in self.tasks:
-                tasks.append(self.__http_request__async(n, session))
+                async_tasks.append(self.__http_request__async(n, session))
 
-            self.data = await asyncio.gather(*tasks)
+            self.data = await asyncio.gather(*async_tasks)
 
     def run_connector(self):
 

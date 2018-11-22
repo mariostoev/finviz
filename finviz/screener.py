@@ -1,13 +1,14 @@
 from .save_data import export_to_db, select_from_db, export_to_csv
+from urllib.parse import urlencode
 from lxml import html
 from lxml import etree
 import finviz.request_functions as send
 import finviz.scraper_functions as scrape
-from os import getcwd
+
 
 class Screener(object):
 
-    def __init__(self, tickers=None, filters=None, order='', rows=None, signal='', table='Overview'):
+    def __init__(self, tickers=None, filters=None, rows=None, order='', signal='', table='Overview'):
 
         if tickers is None:
             self.tickers = []
@@ -31,43 +32,42 @@ class Screener(object):
 
         self.__search_screener()
 
-    def to_csv(self, directory=None):
-
-        if directory is None:
-            directory = getcwd()
-
-        export_to_csv(self.headers, self.data, directory)
-
     def to_sqlite(self):
+
         export_to_db(self.headers, self.data)
 
     def display_db(self):
+
         select_from_db()
 
-    def __get_total_rows(self):
+    def to_csv(self):
 
-        total_element = self.page_content.cssselect('td[width="140"]')
-        self.rows = int(etree.tostring(total_element[0]).decode("utf-8").split('</b>')[1].split(' ')[0])
+        export_to_csv(self.headers, self.data)
 
-    def __get_page_urls(self):
+    def get_charts(self, period='d', size='l', chart_type='c', ta=None, save_to=None):
 
-        try:
-            total_pages = int([i.text.split('/')[1] for i in self.page_content.cssselect('option[value="1"]')][0])
-        except IndexError:  # No results found
-            return None
+        if ta is True or None:  # Charts include TA by default
+            ta = '1'
+        else:
+            ta = '0'
 
-        urls = []
+        payload = {
+            'ty': chart_type,
+            'ta': ta,
+            'p': period,
+            's': size
+        }
 
-        for page_number in range(1, total_pages + 1):
+        base_url = 'https://finviz.com/chart.ashx?' + urlencode(payload)
+        chart_urls = []
 
-            sequence = 1 + (page_number - 1) * 20
+        for page in self.data:
+            for row in page:
+                chart_urls.append(base_url + '&t={}'.format(row.get('Ticker')))
 
-            if sequence - 20 <= self.rows < sequence:
-                break
-            else:
-                urls.append(self.url + '&r={}'.format(str(sequence)))
-
-        self.page_urls = urls
+        async_connector = send.Connector(scrape.download_image, chart_urls)
+        async_connector.directory = save_to
+        async_connector.run_connector()
 
     def __get_table_headers(self):
 
@@ -84,7 +84,7 @@ class Screener(object):
 
         self.headers = headers
 
-    def __get_table_data(self, page=None):
+    def __get_table_data(self, page=None, url=None):
 
         def parse_row(line):
 

@@ -1,4 +1,5 @@
 from lxml import etree
+import os
 
 
 def get_total_rows(page_content):
@@ -27,3 +28,14 @@ def get_page_urls(page_content, rows, url):
             urls.append(url + '&r={}'.format(str(sequence)))
 
     return urls
+
+
+def download_image(page_content, url):
+
+    file_name = url.split('t=')[1] + '.jpg'
+
+    if not os.path.exists('charts'):
+        os.mkdir('charts')
+
+    with open('charts/' + file_name, 'wb') as handle:
+        handle.write(page_content)

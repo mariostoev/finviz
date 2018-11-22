@@ -1,26 +1,28 @@
 import csv
-import os
 import sqlite3
 import re
 
+
 def create_connection():
-    
+
     sqlite_file = "../screener.sqlite"
-    
+
     try:
         conn = sqlite3.connect(sqlite_file)
         return conn
     except sqlite3.Error as error:
         raise ("An error has occurred while connecting to the database: ", error.args[0])
 
-def export_to_csv(headers, data, directory):
 
-    with open(directory + '/screener_results.csv', 'w', newline='') as output_file:
+def export_to_csv(headers, data):
+
+    with open('/screener_results.csv', 'w', newline='') as output_file:
         dict_writer = csv.DictWriter(output_file, headers)
         dict_writer.writeheader()
 
         for n in data:
             dict_writer.writerows(n)
+
 
 def export_to_db(headers, data):
 
@@ -66,11 +68,6 @@ def select_from_db():
     conn = create_connection()
     c = conn.cursor()
     c.execute("SELECT * FROM screener_results")
-
-    rows = c.fetchall()
-
-    for row in rows:
-        print(row)
 
     rows = c.fetchall()
 
