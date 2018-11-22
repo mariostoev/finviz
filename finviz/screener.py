@@ -1,12 +1,9 @@
+from .save_data import export_to_db, select_from_db, export_to_csv
 from lxml import html
 from lxml import etree
 import finviz.request_functions as send
 import finviz.scraper_functions as scrape
-import requests
-import urllib3
-import os
-from .save_data import export_to_csv, export_to_db, select_from_db
-
+from os import getcwd
 
 class Screener(object):
 
@@ -37,16 +34,14 @@ class Screener(object):
     def to_csv(self, directory=None):
 
         if directory is None:
-
-            import os
-            directory = os.getcwd()
+            directory = getcwd()
 
         export_to_csv(self.headers, self.data, directory)
 
-    def to_db(self):
+    def to_sqlite(self):
         export_to_db(self.headers, self.data)
 
-    def from_db(self):
+    def display_db(self):
         select_from_db()
 
     def __get_total_rows(self):
