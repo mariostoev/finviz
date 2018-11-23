@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/finviz.svg)](https://badge.fury.io/py/finviz)
 [![GitHub stars](https://img.shields.io/github/stars/mariostoev/finviz.svg)](https://github.com/mariostoev/finviz/stargazers)
-[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
+[![Downloads](https://pepy.tech/badge/finviz)](https://pepy.tech/project/finviz)
 [![HitCount](http://hits.dwyl.io/mariostoev/finviz.svg)](http://hits.dwyl.io/mariostoev/finviz)
 
 
