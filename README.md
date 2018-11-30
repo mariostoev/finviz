@@ -35,9 +35,6 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
     # Create a SQLite database 
     stocks.to_sqlite()
     
-    # Print the database into the console
-    stocks.display_db()
-    
 ### Download results as a chart
 
     stocks.get_charts(period='m', chart_type='c', size='l', ta=False)  # Monthly, Candles, Large, No Technical Analysis
