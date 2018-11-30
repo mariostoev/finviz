@@ -16,7 +16,7 @@ def create_connection():
 
 def export_to_csv(headers, data):
 
-    with open('/screener_results.csv', 'w', newline='') as output_file:
+    with open('screener_results.csv', 'w', newline='') as output_file:
         dict_writer = csv.DictWriter(output_file, headers)
         dict_writer.writeheader()
 
@@ -61,15 +61,3 @@ def export_to_db(headers, data):
 
     conn.commit()
     conn.close()
-
-
-def select_from_db():
-
-    conn = create_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM screener_results")
-
-    rows = c.fetchall()
-
-    for row in rows:
-        print(row)

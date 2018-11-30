@@ -2,15 +2,15 @@ from distutils.core import setup
 setup(
   name = 'finviz',
   packages = ['finviz'],
-  version = '1.1',
+  version = '1.1.1',
   license='MIT',
   description = 'Unofficial API for finviz.com',
   author = 'Mario Stoev',
-  author_email = 'bg.mstoev@gmail.com',      # Type in your E-Mail
-  url = 'https://github.com/mariostoev/finviz',   # Provide either the link to your github or to your website
-  download_url = 'https://github.com/user/reponame/archive/v_01.tar.gz',    # I explain this later on
-  keywords = ['finviz', 'api', 'screener', 'finviz api', 'charts', 'scraper'],   # Keywords that define your package best
-  install_requires=[            # I get to this in a second
+  author_email = 'bg.mstoev@gmail.com',
+  url = 'https://github.com/mariostoev/finviz',
+  download_url = 'https://github.com/user/reponame/archive/v_01.tar.gz',
+  keywords = ['finviz', 'api', 'screener', 'finviz api', 'charts', 'scraper'],
+  install_requires=[
           'lxml',
           'requests',
           'aiohttp',
