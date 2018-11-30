@@ -1,6 +1,12 @@
 ## finviz-api
 
-`finviz-api` is compatible with Python 3.6+ only 
+[![PyPI version](https://badge.fury.io/py/finviz.svg)](https://badge.fury.io/py/finviz)
+[![GitHub stars](https://img.shields.io/github/stars/mariostoev/finviz.svg)](https://github.com/mariostoev/finviz/stargazers)
+[![Downloads](https://pepy.tech/badge/finviz)](https://pepy.tech/project/finviz)
+[![HitCount](http://hits.dwyl.io/mariostoev/finviz.svg)](http://hits.dwyl.io/mariostoev/finviz)
+
+
+`finviz` is compatible with Python 3.5+ only 
 
 **What is Finviz?**
 
@@ -10,18 +16,46 @@
 
 Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and 20 minutes for NYSE and AMEX. This API should **NOT** be used for live trading, it's main purpuse is financial analysis, research and data scraping.
 
+### Install the current release using PyPi
+
+    pip install finviz
+
 ### Using Screener()
 
-    from finviz import Screener
+    from finviz.screener import Screener
     
-    tickers = ['AAPL', 'ATVI', 'TSLA']
-    filters = ['exch_nasd', 'cap_large']  # Shows companies in NASDAQ with Market Cap from $10bln. to $200bln.
+    filters = ['exch_nasd', 'cap_large']  # Shows companies in NASDAQ with a market cap from $10bln. to $200bln.
     order = '-price'  # Orders the results by price descending
+
+    stocks = Screener(filters, order, rows=50)  # Get the first 50 results
     
-    Screener(tickers, filters, order, rows=37)
-    Screener.to_csv()
+    # Export the screener results to .csv 
+    stocks.to_csv()
     
-    # Creates screener_results.csv file in the current directory
+    # Create a SQLite database 
+    stocks.to_sqlite()
+    
+    # Print the database into the console
+    stocks.display_db()
+    
+### Download results as a chart
+
+    stocks.get_charts(period='m', chart_type='c', size='l', ta=False)  # Monthly, Candles, Large, No Technical Analysis
+    
+    # period='d' > daily 
+    # period='w' > weekly
+    # period='m' > monthly
+    
+    # chart_type='c' > candle
+    # chart_type='l' > lines
+    
+    # size='m' > small
+    # size='l' > large
+    
+    # ta=True > display technical analysis
+    # ta=False > ignore technical analysis
+
+
 
 Below, you can see all of the possible arguments that can be passed through Screener():
 
@@ -31,6 +65,6 @@ Below, you can see all of the possible arguments that can be passed through Scre
 | filters | list | ['exch_nasd', 'cap_large']  | None |
 | order | string | '-price' | None |
 | signal | string | 'ta_topgainers' | None |
-| dir | string | 'C:/User/Desktop/data' | Current Directory |
 | table | string | 'Performance' | 'Overview' |
-| rows | int | 43 | Maximum |
+| rows | string | 43 | Maximum |
+
