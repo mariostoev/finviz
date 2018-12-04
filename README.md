@@ -55,16 +55,7 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
     # ta=True > display technical analysis
     # ta=False > ignore technical analysis
 
+### Documentation
 
-
-Below, you can see all of the possible arguments that can be passed through Screener():
-
-| Argument | Type | Example | Default |
-| :---         |     :---:      |     :---:     |     :---:     |
-| tickers  | list | ['AAPL', 'ATVI', 'TSLA']  | None |
-| filters | list | ['exch_nasd', 'cap_large']  | None |
-| order | string | '-price' | None |
-| signal | string | 'ta_topgainers' | None |
-| table | string | 'Performance' | 'Overview' |
-| rows | string | 43 | Maximum |
+You can read the rest of the documentation inside the docstrings.
 
