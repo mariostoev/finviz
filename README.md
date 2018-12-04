@@ -38,7 +38,7 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
 
 ![alt text](https://i.imgur.com/cb7UdxB.png)
 
-### Download results as a chart
+### Download results as charts
 
     stocks.get_charts(period='m', chart_type='c', size='l', ta=False)  # Monthly, Candles, Large, No Technical Analysis
     
