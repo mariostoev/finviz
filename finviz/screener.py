@@ -5,10 +5,31 @@ from lxml import html
 from lxml import etree
 import finviz.scraper_functions as scrape
 
+# TODO > Add __add__ and __slice__(?) methods to the Screener class
+
 
 class Screener(object):
+    """ Used to download data from http://www.finviz.com/screener.ashx. """
 
     def __init__(self, tickers=None, filters=None, rows=None, order='', signal='', table='Overview'):
+        """
+        Initilizes all variables to its values
+
+        :param tickers: collection of ticker strings eg.: ['AAPL', 'AMD', 'WMT']
+        :type tickers: list
+        :param filters: collection of filters strings eg.: ['exch_nasd', 'idx_sp500', 'fa_div_none']
+        :type filters: list
+        :param rows: total number of rows to get
+        :type rows: int
+        :param order: table order eg.: '-price' (to sort table by descending price)
+        :type order: str
+        :param signal: show by signal eg.: 'n_majornews' (for stocks with major news)
+        :type signal: str
+        :param table: table type eg.: 'Performance'
+        :type table: str
+        :var self.data: pages containing data about each row inside a dictionary
+        :type self.data: list
+        """
 
         if tickers is None:
             self._tickers = []
@@ -46,18 +67,55 @@ class Screener(object):
         else:
             self._rows = rows
 
-        self.data = None
-        self.__search_screener()
+        self.data = self.__search_screener()
+
+    def __repr__(self):
+        """ Returns a string containing readable representation of a table. """
+
+        table_string = ''
+        table_list = [self._headers]
+
+        for page in self.data:
+            for row in page:
+                table_list.append([str(row[col] or '') for col in self._headers])
+
+        col_size = [max(map(len, col)) for col in zip(*table_list)]
+        format_str = ' | '.join(["{{:<{}}}".format(i) for i in col_size])
+        table_list.insert(1, ['-' * i for i in col_size])
+
+        for item in table_list:
+            table_string += format_str.format(*item) + '\n'
+
+        return table_string
+
+    def __len__(self):
+        """ Returns an int with the number of total rows. """
+
+        return int(self._rows)
 
     def to_sqlite(self):
+        """ Exports the generated table into a SQLite database, located in the user's current directory. """
+
         export_to_db(self._headers, self.data)
 
     def to_csv(self):
+        """ Exports the generated table into a CSV file, located in the user's current directory. """
+
         export_to_csv(self._headers, self.data)
 
     def get_charts(self, period='d', size='l', chart_type='c', ta='1'):
+        """
+        Downloads the charts of tickers shown by the table.
 
-        """ Asynchronously downloads charts of tickers displayed by the screener. """
+        :param period: table period eg. : 'd', 'w' or 'm' for daily, weekly and monthly periods
+        :type period: str
+        :param size: table size eg.: 'l' for large or 's' for small - choose large for better quality but higher size
+        :type size: str
+        :param chart_type: chart type: 'c' for candles or 'l' for lines
+        :type chart_type: str
+        :param ta: technical analysis eg.: '1' to show ta '0' to hide ta
+        :type ta: str
+        """
 
         payload = {
             'ty': chart_type,
@@ -73,12 +131,11 @@ class Screener(object):
             for row in page:
                 chart_urls.append(base_url + '&t={}'.format(row.get('Ticker')))
 
-        async_connector = Connector(scrape.download_image, chart_urls)
+        async_connector = Connector(scrape.download_chart_image, chart_urls)
         async_connector.run_connector()
 
     def __get_table_headers(self):
-
-        """ Scrapes the table headers from the initial page. """
+        """ Private function used to return the table headers. """
 
         first_row = self._page_content.cssselect('tr[valign="middle"]')
 
@@ -94,10 +151,9 @@ class Screener(object):
         return headers
 
     def __get_table_data(self, page=None, url=None):
+        """ Private function used to return the table data from a single page. """
 
-        """ Returns the data, from each row of the table, inside a dictionary ."""
-
-        def parse_row(line):
+        def scrape_row(line):
 
             row_data = []
 
@@ -116,20 +172,21 @@ class Screener(object):
         for row in all_rows:
 
             if int(row[0].text) is self._rows:
-                values = dict(zip(self._headers, parse_row(row)))
+                values = dict(zip(self._headers, scrape_row(row)))
                 data_sets.append(values)
                 break
 
             else:
-                values = dict(zip(self._headers, parse_row(row)))
+                values = dict(zip(self._headers, scrape_row(row)))
                 data_sets.append(values)
 
         return data_sets
 
     def __search_screener(self):
-
-        """ Saves data from the FinViz screener. """
+        """ Private function to return the data from the FinViz screener. """
 
         page_urls = scrape.get_page_urls(self._page_content, self._rows, self._url)
         async_connector = Connector(self.__get_table_data, page_urls)
-        self.data = async_connector.run_connector()
+        data = async_connector.run_connector()
+
+        return data

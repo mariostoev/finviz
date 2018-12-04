@@ -3,10 +3,7 @@ import os
 
 
 def get_total_rows(page_content):
-
-    """
-    Gets the total rows of the table. This function is called when the user does not provide a number of rows that have to be scraped.
-    """
+    """ Returns the total number of rows(results). """
 
     total_element = page_content.cssselect('td[width="140"]')
 
@@ -14,8 +11,7 @@ def get_total_rows(page_content):
 
 
 def get_page_urls(page_content, rows, url):
-
-    """ Gets the page URL addresses """
+    """ Returns a list containing all of the page URL addresses. """
 
     try:
         total_pages = int([i.text.split('/')[1] for i in page_content.cssselect('option[value="1"]')][0])
@@ -37,7 +33,8 @@ def get_page_urls(page_content, rows, url):
     return urls
 
 
-def download_image(page_content, url):
+def download_chart_image(page_content, url):
+    """ Downloads a .jpg image of a chart into the "charts" folder. """
 
     file_name = url.split('t=')[1] + '.jpg'
 

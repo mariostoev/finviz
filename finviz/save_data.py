@@ -4,6 +4,7 @@ import re
 
 
 def create_connection():
+    """ Creates a database connection. """
 
     sqlite_file = "../screener.sqlite"
 
@@ -15,6 +16,7 @@ def create_connection():
 
 
 def export_to_csv(headers, data):
+    """ Exports the generated table into a CSV file, located in the user's current directory. """
 
     with open('screener_results.csv', 'w', newline='') as output_file:
         dict_writer = csv.DictWriter(output_file, headers)
@@ -25,6 +27,7 @@ def export_to_csv(headers, data):
 
 
 def export_to_db(headers, data):
+    """ Exports the generated table into a SQLite database, located in the user's current directory. """
 
     field_list = ""
     table_name = "screener_results"  # name of the table to be created
