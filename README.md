@@ -24,10 +24,8 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
 
     from finviz.screener import Screener
     
-    filters = ['exch_nasd', 'cap_large']  # Shows companies in NASDAQ with a market cap from $10bln. to $200bln.
-    order = '-price'  # Orders the results by price descending
-
-    stocks = Screener(filters, order, rows=50)  # Get the first 50 results
+    filters = ['exch_nasd', 'idx_sp500']  # Shows companies in NASDAQ which are in the S&P500
+    stocks = Screener(filters=filters, order='price')  # Get the first 50 results sorted by price ascending
     
     # Export the screener results to .csv 
     stocks.to_csv()
@@ -35,6 +33,11 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
     # Create a SQLite database 
     stocks.to_sqlite()
     
+    # Print the table into the console
+    print(stocks)
+
+![alt text](https://i.imgur.com/cb7UdxB.png)
+
 ### Download results as a chart
 
     stocks.get_charts(period='m', chart_type='c', size='l', ta=False)  # Monthly, Candles, Large, No Technical Analysis
