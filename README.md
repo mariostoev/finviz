@@ -24,10 +24,8 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
 
     from finviz.screener import Screener
     
-    filters = ['exch_nasd', 'cap_large']  # Shows companies in NASDAQ with a market cap from $10bln. to $200bln.
-    order = '-price'  # Orders the results by price descending
-
-    stocks = Screener(filters, order, rows=50)  # Get the first 50 results
+    filters = ['exch_nasd', 'idx_sp500']  # Shows companies in NASDAQ which are in the S&P500
+    stocks = Screener(filters=filters, order='price')  # Get the first 50 results sorted by price ascending
     
     # Export the screener results to .csv 
     stocks.to_csv()
@@ -35,7 +33,12 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
     # Create a SQLite database 
     stocks.to_sqlite()
     
-### Download results as a chart
+    # Print the table into the console
+    print(stocks)
+
+![alt text](https://i.imgur.com/cb7UdxB.png)
+
+### Download results as charts
 
     stocks.get_charts(period='m', chart_type='c', size='l', ta=False)  # Monthly, Candles, Large, No Technical Analysis
     
@@ -52,16 +55,7 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
     # ta=True > display technical analysis
     # ta=False > ignore technical analysis
 
+### Documentation
 
-
-Below, you can see all of the possible arguments that can be passed through Screener():
-
-| Argument | Type | Example | Default |
-| :---         |     :---:      |     :---:     |     :---:     |
-| tickers  | list | ['AAPL', 'ATVI', 'TSLA']  | None |
-| filters | list | ['exch_nasd', 'cap_large']  | None |
-| order | string | '-price' | None |
-| signal | string | 'ta_topgainers' | None |
-| table | string | 'Performance' | 'Overview' |
-| rows | string | 43 | Maximum |
+You can read the rest of the documentation inside the docstrings.
 
