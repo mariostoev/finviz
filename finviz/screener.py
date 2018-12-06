@@ -1,14 +1,14 @@
 from finviz.request_functions import Connector, http_request
+from finviz.error_handling import NoResults, InvalidTableType
 from .save_data import export_to_db, export_to_csv
 from urllib.parse import urlencode
 from lxml import html
 from lxml import etree
 import finviz.scraper_functions as scrape
 
-# TODO > Add __add__ and __slice__(?) methods to the Screener class
-# TODO > Create Error class
 # TODO > Add unittests
-# TODO > Improve performance
+# TODO > Make self.data list of dicts, not lists of lists of dicts
+# TODO > Implement __add__, __slice__, __iter__, __getitem__
 
 
 class Screener(object):
@@ -56,7 +56,12 @@ class Screener(object):
 
         self._order = order
         self._signal = signal
-        self._table = self._table_types[table]
+
+        try:
+            self._table = self._table_types[table]
+        except KeyError:
+            raise InvalidTableType(table)
+
         self._page_unparsed, self._url = http_request('https://finviz.com/screener.ashx', payload={
                                                    'v': self._table,
                                                    't': ','.join(self._tickers),
@@ -64,15 +69,17 @@ class Screener(object):
                                                    'o': self._order,
                                                    's': self._signal
                                                    })
-
         self._page_content = html.fromstring(self._page_unparsed)
-        self._headers = self.__get_table_headers()
+        self._total_rows = scrape.get_total_rows(self._page_content)
 
-        if rows is None:
-            self._rows = scrape.get_total_rows(self._page_content)
+        if self._total_rows == 0:
+            raise NoResults(self._url.split('?')[1])
+        elif rows is None or rows > self._total_rows:
+            self._rows = self._total_rows
         else:
             self._rows = rows
 
+        self._headers = self.__get_table_headers()
         self.data = self.__search_screener()
 
     def __repr__(self):
@@ -113,6 +120,9 @@ class Screener(object):
         """ Returns an int with the number of total rows. """
 
         return int(self._rows)
+
+    def __getitem__(self, position):
+        return self.data
 
     def to_sqlite(self):
         """ Exports the generated table into a SQLite database, located in the user's current directory. """
@@ -192,7 +202,7 @@ class Screener(object):
 
         for row in all_rows:
 
-            if int(row[0].text) is self._rows:
+            if int(row[0].text) == self._rows:
                 values = dict(zip(self._headers, scrape_row(row)))
                 data_sets.append(values)
                 break

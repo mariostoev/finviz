@@ -6,8 +6,12 @@ def get_total_rows(page_content):
     """ Returns the total number of rows(results). """
 
     total_element = page_content.cssselect('td[width="140"]')
+    total_number = etree.tostring(total_element[0]).decode('utf-8').split('</b>')[1].split()[0]
 
-    return int(etree.tostring(total_element[0]).decode("utf-8").split('</b>')[1].split(' ')[0])
+    try:
+        return int(total_number)
+    except ValueError:
+        return 0
 
 
 def get_page_urls(page_content, rows, url):
