@@ -21,9 +21,7 @@ def export_to_csv(headers, data):
     with open('screener_results.csv', 'w', newline='') as output_file:
         dict_writer = csv.DictWriter(output_file, headers)
         dict_writer.writeheader()
-
-        for n in data:
-            dict_writer.writerows(n)
+        dict_writer.writerows(data)
 
 
 def export_to_db(headers, data):
@@ -44,15 +42,14 @@ def export_to_db(headers, data):
               .format(tn=table_name, fl=field_list[:-2]))
 
     inserts = ""
-    for data in data:
+    for row in data:
 
-        for level in data:
+        insert_fields = "("
+        for field, value in row.items():
 
-            insert_fields = "("
-            for field, value in level.items():
-                insert_fields += "\"" + value + "\", "
+            insert_fields += "\"" + value + "\", "
 
-            inserts += insert_fields[:-2] + "), "
+        inserts += insert_fields[:-2] + "), "
 
     insert_lines = inserts[:-2]
 
