@@ -25,16 +25,19 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
     from finviz.screener import Screener
     
     filters = ['exch_nasd', 'idx_sp500']  # Shows companies in NASDAQ which are in the S&P500
-    stocks = Screener(filters=filters, order='price')  # Get the first 50 results sorted by price ascending
+    stock_list = Screener(filters=filters, order='price')  # Get the first 50 results sorted by price ascending
     
     # Export the screener results to .csv 
-    stocks.to_csv()
+    stock_list.to_csv()
     
     # Create a SQLite database 
-    stocks.to_sqlite()
+    stock_list.to_sqlite()
+    
+    for stock in stock_list[9:19]:  # Loop through 10th - 20th stocks 
+        print(stock['Ticker'], stock['Price']) # Print symbol and price
     
     # Print the table into the console
-    print(stocks)
+    print(stock_list)
 
 ![alt text](https://i.imgur.com/cb7UdxB.png)
 
