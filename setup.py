@@ -8,7 +8,7 @@ setup(
   author = 'Mario Stoev',
   author_email = 'bg.mstoev@gmail.com',
   url = 'https://github.com/mariostoev/finviz',
-  download_url = 'https://github.com/mariostoev/finviz/archive/v1.1.1.tar.gz',
+  download_url = 'https://github.com/mariostoev/finviz/archive/1.1.2.tar.gz',
   keywords = ['finviz', 'api', 'screener', 'finviz api', 'charts', 'scraper'],
   install_requires=[
           'lxml',

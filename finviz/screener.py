@@ -6,6 +6,9 @@ from lxml import etree
 import finviz.scraper_functions as scrape
 
 # TODO > Add __add__ and __slice__(?) methods to the Screener class
+# TODO > Create Error class
+# TODO > Add unittests
+# TODO > Improve performance
 
 
 class Screener(object):
@@ -51,12 +54,15 @@ class Screener(object):
             'Technical': '170'
         }
 
+        self._order = order
+        self._signal = signal
+        self._table = self._table_types[table]
         self._page_unparsed, self._url = http_request('https://finviz.com/screener.ashx', payload={
-                                                   'v': self._table_types[table],
+                                                   'v': self._table,
                                                    't': ','.join(self._tickers),
                                                    'f': ','.join(self._filters),
-                                                   'o': order,
-                                                   's': signal
+                                                   'o': self._order,
+                                                   's': self._signal
                                                    })
 
         self._page_content = html.fromstring(self._page_unparsed)
@@ -70,6 +76,21 @@ class Screener(object):
         self.data = self.__search_screener()
 
     def __repr__(self):
+        """ Returns a string representation of the parameter's values. """
+
+        return 'tickers: {}\n' \
+               'filters: {}\n' \
+               'rows: {}\n' \
+               'order: {}\n' \
+               'signal: {}\n' \
+               'table: {}'.format(tuple(self._tickers),
+                                  tuple(self._filters),
+                                  self._rows,
+                                  self._order,
+                                  self._signal,
+                                  self._table)
+
+    def __str__(self):
         """ Returns a string containing readable representation of a table. """
 
         table_string = ''
@@ -183,7 +204,7 @@ class Screener(object):
         return data_sets
 
     def __search_screener(self):
-        """ Private function to return the data from the FinViz screener. """
+        """ Private function used to return the data from the FinViz screener. """
 
         page_urls = scrape.get_page_urls(self._page_content, self._rows, self._url)
         async_connector = Connector(self.__get_table_data, page_urls)
