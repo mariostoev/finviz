@@ -7,7 +7,7 @@ from lxml import etree
 import finviz.scraper_functions as scrape
 
 # TODO > Add unittests
-# TODO > Implement __add__ function
+# TODO > Implement __add__
 
 
 class Screener(object):
@@ -53,48 +53,49 @@ class Screener(object):
             'Technical': '170'
         }
 
+        if table != 'Overview':
+            self._table = self.__check_table(table)
+        else:
+            self._table = table
+
+        self._rows = rows
         self._order = order
         self._signal = signal
 
-        try:
-            self._table = self._table_types[table]
-        except KeyError:
-            raise InvalidTableType(table)
-
-        self._page_unparsed, self._url = http_request('https://finviz.com/screener.ashx', payload={
-                                                   'v': self._table,
-                                                   't': ','.join(self._tickers),
-                                                   'f': ','.join(self._filters),
-                                                   'o': self._order,
-                                                   's': self._signal
-                                                   })
-        self._page_content = html.fromstring(self._page_unparsed)
-        self._total_rows = scrape.get_total_rows(self._page_content)
-
-        if self._total_rows == 0:
-            raise NoResults(self._url.split('?')[1])
-        elif rows is None or rows > self._total_rows:
-            self._rows = self._total_rows
-        else:
-            self._rows = rows
-
-        self.headers = self.__get_table_headers()
         self.data = self.__search_screener()
 
-    def __repr__(self):
-        """ Returns a string representation of the parameter's values. """
+    def __call__(self, tickers=None, filters=None, rows=None, order='', signal='', table=None):
+        """
+        Adds more filters to the screener. Example usage:
 
-        return 'tickers: {}\n' \
-               'filters: {}\n' \
-               'rows: {}\n' \
-               'order: {}\n' \
-               'signal: {}\n' \
-               'table: {}'.format(tuple(self._tickers),
-                                  tuple(self._filters),
-                                  self._rows,
-                                  self._order,
-                                  self._signal,
-                                  self._table)
+        stock_list = Screener(filters=['cap_large'])  # All the stocks with large market cap
+        # After analyzing you decide you want to see which of the stocks have high dividend yield
+        # and show their performance:
+        stock_list(filters=['fa_div_high'], table='Performance')
+        # Shows performance of stocks with large market cap and high dividend yield
+        """
+
+        if tickers:
+            [self._tickers.append(item) for item in tickers]
+
+        if filters:
+            [self._filters.append(item) for item in filters]
+
+        if table:
+            self._table = self.__check_table(table)
+
+        if order:
+            self._order = order
+
+        if signal:
+            self._signal = signal
+
+        if rows:
+            self._rows = rows
+
+        self.data = self.__search_screener()
+
+    add = __call__
 
     def __str__(self):
         """ Returns a string containing readable representation of a table. """
@@ -106,13 +107,25 @@ class Screener(object):
             table_list.append([row[col] or '' for col in self.headers])
 
         col_size = [max(map(len, col)) for col in zip(*table_list)]
-        format_str = ' | '.join(["{{:<{}}}".format(i) for i in col_size])
+        format_str = ' | '.join([f"{{:<{i}}}" for i in col_size])
         table_list.insert(1, ['-' * i for i in col_size])
 
         for item in table_list:
             table_string += format_str.format(*item) + '\n'
 
         return table_string
+
+    def __repr__(self):
+        """ Returns a string representation of the parameter's values. """
+
+        values = f'tickers: {tuple(self._tickers)}\n' \
+                 f'filters: {tuple(self._filters)}\n' \
+                 f'rows: {self._rows}\n' \
+                 f'order: {self._order}\n' \
+                 f'signal: {self._signal}\n' \
+                 f'table: {self._table}'
+
+        return values
 
     def __len__(self):
         """ Returns an int with the number of total rows. """
@@ -123,6 +136,8 @@ class Screener(object):
         """ Returns a dictionary containting specific row data. """
 
         return self.data[position]
+
+    get = __getitem__
 
     def to_sqlite(self):
         """ Exports the generated table into a SQLite database, located in the user's current directory. """
@@ -159,10 +174,33 @@ class Screener(object):
         chart_urls = []
 
         for row in self.data:
-            chart_urls.append(base_url + '&t={}'.format(row.get('Ticker')))
+            chart_urls.append(base_url + f"&t={row.get('Ticker')}")
 
         async_connector = Connector(scrape.download_chart_image, chart_urls)
         async_connector.run_connector()
+
+    def __check_rows(self):
+        """
+        Checks if the user input for row number is correct.
+        Otherwise, modifies the number or raises NoResults error.
+        """
+
+        self._total_rows = scrape.get_total_rows(self._page_content)
+        if self._total_rows == 0:
+            raise NoResults(self._url.split('?')[1])
+        elif self._rows is None or self._rows > self._total_rows:
+            return self._total_rows
+        else:
+            return self._rows
+
+    def __check_table(self, input_table):
+        """ Checks if the user input for table type is correct. Otherwise, raises an InvalidTableType error. """
+
+        try:
+            table = self._table_types[input_table]
+            return table
+        except KeyError:
+            raise InvalidTableType(input_table)
 
     def __get_table_headers(self):
         """ Private function used to return table headers. """
@@ -215,7 +253,19 @@ class Screener(object):
     def __search_screener(self):
         """ Private function used to return data from the FinViz screener. """
 
+        self._page_unparsed, self._url = http_request('https://finviz.com/screener.ashx', payload={
+                                                   'v': self._table,
+                                                   't': ','.join(self._tickers),
+                                                   'f': ','.join(self._filters),
+                                                   'o': self._order,
+                                                   's': self._signal
+                                                   })
+
+        self._page_content = html.fromstring(self._page_unparsed)
+        self._rows = self.__check_rows()
+        self.headers = self.__get_table_headers()
         page_urls = scrape.get_page_urls(self._page_content, self._rows, self._url)
+
         async_connector = Connector(self.__get_table_data, page_urls)
         pages_data = async_connector.run_connector()
 

@@ -17,12 +17,7 @@ def get_total_rows(page_content):
 def get_page_urls(page_content, rows, url):
     """ Returns a list containing all of the page URL addresses. """
 
-    try:
-        total_pages = int([i.text.split('/')[1] for i in page_content.cssselect('option[value="1"]')][0])
-    except IndexError:
-        raise Exception("No results matching the criteria: {}"
-                        .format(url.split('?', 1)[1]))
-
+    total_pages = int([i.text.split('/')[1] for i in page_content.cssselect('option[value="1"]')][0])
     urls = []
 
     for page_number in range(1, total_pages + 1):
@@ -32,7 +27,7 @@ def get_page_urls(page_content, rows, url):
         if sequence - 20 <= rows < sequence:
             break
         else:
-            urls.append(url + '&r={}'.format(str(sequence)))
+            urls.append(url + f'&r={str(sequence)}')
 
     return urls
 

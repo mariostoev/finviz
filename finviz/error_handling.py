@@ -3,7 +3,7 @@ class NoResults(Exception):
 
     def __init__(self, query):
         self.query = query
-        super(NoResults, self).__init__("No results found for query: {}".format(query))
+        super(NoResults, self).__init__(f"No results found for query: {query}")
 
 
 class InvalidTableType(Exception):
@@ -11,4 +11,4 @@ class InvalidTableType(Exception):
 
     def __init__(self, arg):
         self.arg = arg
-        super(InvalidTableType, self).__init__("Invalid table type called: {}".format(arg))
+        super(InvalidTableType, self).__init__(f"Invalid table type called: {arg}")
