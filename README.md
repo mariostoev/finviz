@@ -68,4 +68,4 @@ You can read the rest of the documentation inside the docstrings.
 
 ### Contributing 
 
-You can contribute to the project by reporting bugs, suggesting enhancements or directly, by extending and writing features (see the ongoing [projects](https://github.com/mariostoev/finviz/projects/1)).
+You can contribute to the project by reporting bugs, suggesting enhancements, or directly by extending and writing features (see the ongoing [projects](https://github.com/mariostoev/finviz/projects/1)).
