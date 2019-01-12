@@ -14,7 +14,8 @@ setup(
           'lxml',
           'requests',
           'aiohttp',
-          'urllib3'
+          'urllib3',
+          'cssselect'
       ],
   classifiers=[
     'Development Status :: 5 - Production/Stable',
