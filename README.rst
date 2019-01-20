@@ -143,3 +143,8 @@ Contributing
 You can contribute to the project by reporting bugs, suggesting enhancements, or directly by extending and writing features (see the ongoing projects_).
 
 .. _projects: https://github.com/mariostoev/finviz/projects/1
+
+*You can also buy me a coffee!*
+
+.. image:: http://rickrduncan.com/wp-content/uploads/2017/11/buy-me-coffee-paypal.png
+        :target: https://www.paypal.me/finvizapi
