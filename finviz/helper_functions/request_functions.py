@@ -1,3 +1,4 @@
+from lxml import html
 import asyncio
 import aiohttp
 import requests
@@ -6,25 +7,33 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def http_request(url, payload=None):
-    """ Makes a HTTP request to a website and returns its HTML content and full url address. """
+def http_request_get(url, session=None, payload=None, parse=True):
+    """ Sends a GET HTTP request to a website and returns its HTML content and full url address. """
 
     if payload is None:
         payload = {}
 
-    content = requests.get(url, params=payload, verify=False)
+    if session:
+        content = session.get(url, params=payload, verify=False)
+    else:
+        content = requests.get(url, params=payload, verify=False)
+
     content.raise_for_status()  # Raise HTTPError for bad requests (4xx or 5xx)
 
-    return content.text, content.url
+    if parse:
+        return html.fromstring(content.text), content.url
+    else:
+        return content.text, content.url
 
 
 class Connector(object):
     """ Used to make asynchronous HTTP requests. """
 
-    def __init__(self, scrape_function, tasks):
+    def __init__(self, scrape_function, tasks, *args):
 
         self.scrape_function = scrape_function
         self.tasks = tasks
+        self.arguments = args
         self.data = []
 
     async def __http_request__async(self, url, session):
@@ -33,7 +42,7 @@ class Connector(object):
         async with session.get(url) as response:
             page_html = await response.read()
 
-            return self.scrape_function(page_html, url)
+            return self.scrape_function(page_html, url=url, *self.arguments)
 
     async def __async_scraper(self):
         """ Adds a URL's into a list of tasks and requests their response asynchronously. """

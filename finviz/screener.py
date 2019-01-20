@@ -1,13 +1,14 @@
-from finviz.request_functions import Connector, http_request
-from finviz.error_handling import NoResults, InvalidTableType
-from .save_data import export_to_db, export_to_csv
+from finviz.helper_functions.request_functions import Connector, http_request_get
+from finviz.helper_functions.error_handling import NoResults, InvalidTableType
+from finviz.helper_functions.save_data import export_to_db, export_to_csv
+from finviz.helper_functions.display_functions import create_table_string
 from urllib.parse import urlencode
-from lxml import html
 from lxml import etree
-import finviz.scraper_functions as scrape
+import finviz.helper_functions.scraper_functions as scrape
 
 # TODO > Add unittests
 # TODO > Implement __add__
+# TODO > Scrape more info for individual stock
 
 
 class Screener(object):
@@ -98,22 +99,14 @@ class Screener(object):
     add = __call__
 
     def __str__(self):
-        """ Returns a string containing readable representation of a table. """
+        """ Returns a readable representation of a table. """
 
-        table_string = ''
         table_list = [self.headers]
 
         for row in self.data:
             table_list.append([row[col] or '' for col in self.headers])
 
-        col_size = [max(map(len, col)) for col in zip(*table_list)]
-        format_str = ' | '.join([f"{{:<{i}}}" for i in col_size])
-        table_list.insert(1, ['-' * i for i in col_size])
-
-        for item in table_list:
-            table_string += format_str.format(*item) + '\n'
-
-        return table_string
+        return create_table_string(table_list)
 
     def __repr__(self):
         """ Returns a string representation of the parameter's values. """
@@ -186,6 +179,7 @@ class Screener(object):
         """
 
         self._total_rows = scrape.get_total_rows(self._page_content)
+
         if self._total_rows == 0:
             raise NoResults(self._url.split('?')[1])
         elif self._rows is None or self._rows > self._total_rows:
@@ -205,55 +199,12 @@ class Screener(object):
     def __get_table_headers(self):
         """ Private function used to return table headers. """
 
-        first_row = self._page_content.cssselect('tr[valign="middle"]')
-
-        headers = []
-        for table_content in first_row[0]:
-
-            if table_content.text is None:
-                sorted_text_list = etree.tostring(table_content.cssselect('img')[0]).decode("utf-8").split('/>')
-                headers.append(sorted_text_list[1])
-            else:
-                headers.append(table_content.text)
-
-        return headers
-
-    def __get_table_data(self, page=None, url=None):
-        """ Private function used to return table data from a single page. """
-
-        def scrape_row(line):
-
-            row_data = []
-
-            for tags in line:
-                if tags.text is not None:
-                    row_data.append(tags.text)
-                else:
-                    row_data.append([span.text for span in tags.cssselect('span')][0])
-
-            return row_data
-
-        data_sets = []
-        page = html.fromstring(page)
-        all_rows = [i.cssselect('a') for i in page.cssselect('tr[valign="top"]')[1:]]
-
-        for row in all_rows:
-
-            if int(row[0].text) == self._rows:
-                values = dict(zip(self.headers, scrape_row(row)))
-                data_sets.append(values)
-                break
-
-            else:
-                values = dict(zip(self.headers, scrape_row(row)))
-                data_sets.append(values)
-
-        return data_sets
+        return self._page_content.cssselect('tr[valign="middle"]')[0].xpath('td//text()')
 
     def __search_screener(self):
         """ Private function used to return data from the FinViz screener. """
 
-        self._page_unparsed, self._url = http_request('https://finviz.com/screener.ashx', payload={
+        self._page_content, self._url = http_request_get('https://finviz.com/screener.ashx', payload={
                                                    'v': self._table,
                                                    't': ','.join(self._tickers),
                                                    'f': ','.join(self._filters),
@@ -261,12 +212,14 @@ class Screener(object):
                                                    's': self._signal
                                                    })
 
-        self._page_content = html.fromstring(self._page_unparsed)
         self._rows = self.__check_rows()
         self.headers = self.__get_table_headers()
         page_urls = scrape.get_page_urls(self._page_content, self._rows, self._url)
 
-        async_connector = Connector(self.__get_table_data, page_urls)
+        async_connector = Connector(scrape.get_table,
+                                    page_urls,
+                                    self.headers,
+                                    self._rows)
         pages_data = async_connector.run_connector()
 
         data = []
