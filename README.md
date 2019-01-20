@@ -6,7 +6,7 @@
 [![HitCount](http://hits.dwyl.io/mariostoev/finviz.svg)](http://hits.dwyl.io/mariostoev/finviz)
 
 
-`finviz` is compatible with Python 3.5+ only 
+`finviz` is compatible with Python 3.6+ only 
 
 **What is Finviz?**
 
@@ -36,6 +36,10 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
     for stock in stock_list[9:19]:  # Loop through 10th - 20th stocks 
         print(stock['Ticker'], stock['Price']) # Print symbol and price
     
+    # Add more filters
+    stock_list.add(filters=['fa_div_high'])  # Show stocks with high dividend yield
+    # or just stock_list(filters=['fa_div_high'])
+ 
     # Print the table into the console
     print(stock_list)
 
@@ -43,7 +47,7 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
 
 ### Download results as charts
 
-    stocks.get_charts(period='m', chart_type='c', size='l', ta=False)  # Monthly, Candles, Large, No Technical Analysis
+    stock_list.get_charts(period='m', chart_type='c', size='l', ta=False)  # Monthly, Candles, Large, No Technical Analysis
     
     # period='d' > daily 
     # period='w' > weekly
@@ -62,3 +66,6 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
 
 You can read the rest of the documentation inside the docstrings.
 
+### Contributing 
+
+You can contribute to the project by reporting bugs, suggesting enhancements, or directly by extending and writing features (see the ongoing [projects](https://github.com/mariostoev/finviz/projects/1)).
