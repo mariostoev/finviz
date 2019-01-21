@@ -8,7 +8,6 @@ import finviz.helper_functions.scraper_functions as scrape
 
 # TODO > Add unittests
 # TODO > Implement __add__
-# TODO > Scrape more info for individual stock
 
 
 class Screener(object):

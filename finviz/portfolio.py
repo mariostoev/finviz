@@ -19,8 +19,6 @@ PORTFOLIO_HEADERS = [
     'Gain%', 'Change$'
 ]
 
-# TODO > Connect the __str__ function from Screener to Portfolio
-
 
 class Portfolio(object):
     """ Used to interact with FinViz Portfolio. """
@@ -37,7 +35,7 @@ class Portfolio(object):
 
         # Create a session and log in by sending a POST request
         self._session = requests.session()
-        auth_response = self._session.post(LOGIN_URL, data=payload)  # TODO > Check if auth was successful
+        auth_response = self._session.post(LOGIN_URL, data=payload)
 
         if not auth_response.ok:  # If the post request wasn't successful
             auth_response.raise_for_status()
