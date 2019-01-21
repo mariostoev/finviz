@@ -110,6 +110,19 @@ Note that, if any *optional* fields are left empty, the API will assign them tod
 .. code:: python
 
     portfolio.create_portfolio('<portfolio-name>', '<path-to-csv-file>')
+
+Individual stocks
+=====
+
+.. code:: pycon
+
+    >>> import finviz
+    >>> finviz.get_stock('AAPL')
+    {'Index': 'DJIA S&P500', 'P/E': '12.91', 'EPS (ttm)': '12.15',...
+    >>> finviz.get_insider('АAPL')
+    [{'Insider Trading': 'KONDO CHRIS', 'Relationship': 'Principal Accounting Officer', 'Date': 'Nov 19', 'Transaction':            'Sale', 'Cost': '190.00', '#Shares': '3,408', 'Value ($)': '647,520', '#Shares Total': '8,940', 'SEC Form 4': 'Nov 21           06:31 PM'},...
+    >>> finviz.get_news('AAPL')
+    [('Chinas Economy Slows to the Weakest Pace Since 2009', 'https://finance.yahoo.com/news/china-economy-slows-weakest-pace-      020040147.html'),...
     
 Downloading charts
 =====
