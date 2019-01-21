@@ -103,19 +103,6 @@ class Portfolio(object):
 
         self._session.post(PORTFOLIO_SUBMIT_URL, data=data)
 
-    def __portfolio_exists(self, func):
-        """ Private function used to check whether the user has an existing portfolio. """
-
-        def wrapper(*args, **kwargs):
-            if not self.created:
-                raise NoPortfolio(func.__name__)
-
-            out = func(*args, **kwargs)
-
-            return out
-
-        return wrapper
-
     def __get_portfolio_url(self, portfolio_name):
         """ Private function used to return the portfolio url from a given id/name. """
 
