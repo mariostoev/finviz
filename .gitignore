@@ -21,6 +21,8 @@ parts/
 sdist/
 var/
 wheels/
+finviz/test.py
+finviz/portfolio.csv
 *.egg-info/
 .installed.cfg
 *.egg
