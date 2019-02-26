@@ -1,8 +1,11 @@
 from distutils.core import setup
 setup(
   name = 'finviz',
-  packages = ['finviz'],
-  version = '1.2.2',
+  packages = [
+          'finviz',
+          'finviz.helper_functions'
+      ],
+  version = '1.2.3',
   license='MIT',
   description = 'Unofficial API for finviz.com',
   author = 'Mario Stoev',
