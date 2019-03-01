@@ -15,6 +15,15 @@ class Screener(object):
 
     @classmethod
     def from_url(cls, url, rows=None):
+        """
+        Initilizes from url
+
+        :param url: screener url
+        :type url: string
+        :param rows: total number of rows to get
+        :type rows: int
+        """
+
         splitted_url = urlparse(url)
         splitted_query = urlparse_qs(splitted_url.query)
 
@@ -40,6 +49,7 @@ class Screener(object):
             table_number_string = splitted_query['v'][0][0:2] + '0'
             try:
                 table = table_numbers_types[table_number_string]
+                print(table)
             except KeyError:
                 raise InvalidTableType(splitted_query['v'][0])
         else:
