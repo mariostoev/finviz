@@ -2,7 +2,7 @@ from finviz.helper_functions.request_functions import Connector, http_request_ge
 from finviz.helper_functions.error_handling import NoResults, InvalidTableType
 from finviz.helper_functions.save_data import export_to_db, export_to_csv
 from finviz.helper_functions.display_functions import create_table_string
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse, parse_qs as urlparse_qs
 from lxml import etree
 import finviz.helper_functions.scraper_functions as scrape
 
@@ -12,6 +12,48 @@ import finviz.helper_functions.scraper_functions as scrape
 
 class Screener(object):
     """ Used to download data from http://www.finviz.com/screener.ashx. """
+
+    @classmethod
+    def from_url(cls, url, rows=None):
+        splitted_url = urlparse(url)
+        splitted_query = urlparse_qs(splitted_url.query)
+
+        tickers = None
+        if 't' in splitted_query:
+            tickers = splitted_query['t'][0].split(',')
+
+        filters = None
+        if 'f' in splitted_query:
+            filters = splitted_query['f'][0].split(',')
+
+        table = None
+        if 'v' in splitted_query:
+            table_numbers_types = {
+                '110': 'Overview',
+                '120': 'Valuation',
+                '130': 'Ownership',
+                '140': 'Performance',
+                '150': 'Custom',
+                '160': 'Financial',
+                '170': 'Technical'
+            }
+            table_number_string = splitted_query['v'][0][0:2] + '0'
+            try:
+                table = table_numbers_types[table_number_string]
+            except KeyError:
+                raise InvalidTableType(splitted_query['v'][0])
+        else:
+            table = 'Overview'
+
+        order = ''
+        if 'o' in splitted_query:
+            order = splitted_query['o'][0]
+
+        signal = ''
+        if 's' in splitted_query:
+            order = splitted_query['s'][0]
+
+        return cls(tickers, filters, rows, order, signal, table)
 
     def __init__(self, tickers=None, filters=None, rows=None, order='', signal='', table='Overview'):
         """
