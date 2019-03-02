@@ -14,7 +14,7 @@ class Screener(object):
     """ Used to download data from http://www.finviz.com/screener.ashx. """
 
     @classmethod
-    def from_url(cls, url, rows=None):
+    def init_from_url(cls, url, rows=None):
         """
         Initilizes from url
 
