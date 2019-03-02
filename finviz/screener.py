@@ -9,6 +9,15 @@ import finviz.helper_functions.scraper_functions as scrape
 # TODO > Add unittests
 # TODO > Implement __add__
 
+TABLE_TYPES = {
+    'Overview': '110',
+    'Valuation': '120',
+    'Ownership': '130',
+    'Performance': '140',
+    'Custom': '150',
+    'Financial': '160',
+    'Technical': '170'
+}
 
 class Screener(object):
     """ Used to download data from http://www.finviz.com/screener.ashx. """
@@ -37,15 +46,7 @@ class Screener(object):
 
         table = None
         if 'v' in splitted_query:
-            table_numbers_types = {
-                '110': 'Overview',
-                '120': 'Valuation',
-                '130': 'Ownership',
-                '140': 'Performance',
-                '150': 'Custom',
-                '160': 'Financial',
-                '170': 'Technical'
-            }
+            table_numbers_types = {v: k for k, v in TABLE_TYPES.items()}
             table_number_string = splitted_query['v'][0][0:2] + '0'
             try:
                 table = table_numbers_types[table_number_string]
@@ -93,16 +94,6 @@ class Screener(object):
             self._filters = []
         else:
             self._filters = filters
-
-        self._table_types = {
-            'Overview': '110',
-            'Valuation': '120',
-            'Ownership': '130',
-            'Performance': '140',
-            'Custom': '150',
-            'Financial': '160',
-            'Technical': '170'
-        }
 
         if table != 'Overview':
             self._table = self.__check_table(table)
@@ -241,7 +232,7 @@ class Screener(object):
         """ Checks if the user input for table type is correct. Otherwise, raises an InvalidTableType error. """
 
         try:
-            table = self._table_types[input_table]
+            table = TABLE_TYPES[input_table]
             return table
         except KeyError:
             raise InvalidTableType(input_table)
