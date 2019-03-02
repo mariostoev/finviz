@@ -49,7 +49,6 @@ class Screener(object):
             table_number_string = splitted_query['v'][0][0:2] + '0'
             try:
                 table = table_numbers_types[table_number_string]
-                print(table)
             except KeyError:
                 raise InvalidTableType(splitted_query['v'][0])
         else:
