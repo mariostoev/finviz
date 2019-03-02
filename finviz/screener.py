@@ -131,15 +131,24 @@ class Screener(object):
 
     get = __getitem__
 
-    def to_sqlite(self):
-        """ Exports the generated table into a SQLite database, located in the user's current directory. """
+    def to_sqlite(self, filename):
+        """ Exports the generated table into a SQLite database.
 
-        export_to_db(self.headers, self.data)
+        :param filename: SQLite database file path
+        :type filename: str
+        """
 
-    def to_csv(self):
-        """ Exports the generated table into a CSV file, located in the user's current directory. """
+        export_to_db(self.headers, self.data, filename)
 
-        export_to_csv(self.headers, self.data)
+    def to_csv(self, filename=None):
+        """ Exports the generated table into a CSV file.
+        Returns a CSV string if filename is None.
+
+        :param filename: CSV file path
+        :type filename: str
+        """
+
+        return export_to_csv(self.headers, self.data, filename)
 
     def get_charts(self, period='d', size='l', chart_type='c', ta='1'):
         """
