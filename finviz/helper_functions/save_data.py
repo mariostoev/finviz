@@ -1,12 +1,11 @@
 import csv
+import io
 import sqlite3
 import re
 
 
-def create_connection():
+def create_connection(sqlite_file):
     """ Creates a database connection. """
-
-    sqlite_file = "../screener.sqlite"
 
     try:
         conn = sqlite3.connect(sqlite_file)
@@ -15,21 +14,33 @@ def create_connection():
         raise ("An error has occurred while connecting to the database: ", error.args[0])
 
 
-def export_to_csv(headers, data):
-    """ Exports the generated table into a CSV file, located in the user's current directory. """
+def __write_csv_to_stream(stream, headers, data):
+    """Writes the data in CSV format to a stream."""
 
-    with open('screener_results.csv', 'w', newline='') as output_file:
-        dict_writer = csv.DictWriter(output_file, headers)
-        dict_writer.writeheader()
-        dict_writer.writerows(data)
+    dict_writer = csv.DictWriter(stream, headers)
+    dict_writer.writeheader()
+    dict_writer.writerows(data)
 
 
-def export_to_db(headers, data):
-    """ Exports the generated table into a SQLite database, located in the user's current directory. """
+def export_to_csv(headers, data, filename=None):
+    """ Exports the generated table into a CSV file if a file is mentioned.
+    Returns the CSV table as a string if no file is mentioned."""
+
+    if filename:
+        with open(filename, 'w', newline='') as output_file:
+            __write_csv_to_stream(output_file, headers, data)
+        return None
+    stream = io.StringIO()
+    __write_csv_to_stream(stream, headers, data)
+    return stream.getvalue()
+
+
+def export_to_db(headers, data, filename):
+    """ Exports the generated table into a SQLite database into a file."""
 
     field_list = ""
     table_name = "screener_results"  # name of the table to be created
-    conn = create_connection()
+    conn = create_connection(filename)
     c = conn.cursor()
 
     for field in headers:
