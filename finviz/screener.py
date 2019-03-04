@@ -3,21 +3,18 @@ from finviz.helper_functions.error_handling import NoResults, InvalidTableType
 from finviz.helper_functions.save_data import export_to_db, export_to_csv
 from finviz.helper_functions.display_functions import create_table_string
 from urllib.parse import urlencode, urlparse, parse_qs as urlparse_qs
-from lxml import etree
 import finviz.helper_functions.scraper_functions as scrape
 
-# TODO > Add unittests
-# TODO > Implement __add__
-
 TABLE_TYPES = {
-    'Overview': '110',
-    'Valuation': '120',
-    'Ownership': '130',
-    'Performance': '140',
-    'Custom': '150',
-    'Financial': '160',
-    'Technical': '170'
+    'Overview': '111',
+    'Valuation': '121',
+    'Ownership': '131',
+    'Performance': '141',
+    'Custom': '152',
+    'Financial': '161',
+    'Technical': '171'
 }
+
 
 class Screener(object):
     """ Used to download data from http://www.finviz.com/screener.ashx. """
@@ -47,13 +44,17 @@ class Screener(object):
         table = None
         if 'v' in splitted_query:
             table_numbers_types = {v: k for k, v in TABLE_TYPES.items()}
-            table_number_string = splitted_query['v'][0][0:2] + '0'
+            table_number_string = splitted_query['v'][0][0:3]
             try:
                 table = table_numbers_types[table_number_string]
             except KeyError:
                 raise InvalidTableType(splitted_query['v'][0])
         else:
             table = 'Overview'
+
+        custom = None
+        if 'c' in splitted_query:
+            custom = splitted_query['c'][0].split(',')
 
         order = ''
         if 'o' in splitted_query:
@@ -63,9 +64,9 @@ class Screener(object):
         if 's' in splitted_query:
             order = splitted_query['s'][0]
 
-        return cls(tickers, filters, rows, order, signal, table)
+        return cls(tickers, filters, rows, order, signal, table, custom)
 
-    def __init__(self, tickers=None, filters=None, rows=None, order='', signal='', table='Overview'):
+    def __init__(self, tickers=None, filters=None, rows=None, order='', signal='', table=None, custom=None):
         """
         Initilizes all variables to its values
 
@@ -81,6 +82,8 @@ class Screener(object):
         :type signal: str
         :param table: table type eg.: 'Performance'
         :type table: str
+        :param custom: collection of custom columns eg.: ['1', '21', '23', '45']
+        :type custom: list
         :var self.data: list of dictionaries containing row data
         :type self.data: list
         """
@@ -95,10 +98,19 @@ class Screener(object):
         else:
             self._filters = filters
 
-        if table != 'Overview':
-            self._table = self.__check_table(table)
+        if table is None:
+            self._table = 'Overview'
         else:
-            self._table = table
+            self._table = self.__check_table(table)
+
+        if custom is None:
+            self._custom = []
+        else:
+            self._table = '152'
+            self._custom = custom
+
+            if '0' not in self._custom:  # 0 (No.) is required for the sequence algorithm to work
+                self._custom = ['0'] + self._custom
 
         self._rows = rows
         self._order = order
@@ -106,7 +118,7 @@ class Screener(object):
 
         self.data = self.__search_screener()
 
-    def __call__(self, tickers=None, filters=None, rows=None, order='', signal='', table=None):
+    def __call__(self, tickers=None, filters=None, rows=None, order='', signal='', table=None, custom=None):
         """
         Adds more filters to the screener. Example usage:
 
@@ -135,6 +147,9 @@ class Screener(object):
         if rows:
             self._rows = rows
 
+        if custom:
+            self._custom = custom
+
         self.data = self.__search_screener()
 
     add = __call__
@@ -157,7 +172,8 @@ class Screener(object):
                  f'rows: {self._rows}\n' \
                  f'order: {self._order}\n' \
                  f'signal: {self._signal}\n' \
-                 f'table: {self._table}'
+                 f'table: {self._table}\n' \
+                 f'table: {self._custom}'
 
         return values
 
@@ -259,7 +275,8 @@ class Screener(object):
                                                    't': ','.join(self._tickers),
                                                    'f': ','.join(self._filters),
                                                    'o': self._order,
-                                                   's': self._signal
+                                                   's': self._signal,
+                                                   'c': ','.join(self._custom)
                                                    })
 
         self._rows = self.__check_rows()
