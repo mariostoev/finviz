@@ -20,13 +20,10 @@ def get_table(page_html, headers, rows=None, url=None):
 
     # If rows is different from -2, this function is called from Screener
     if rows != -2:
-        for row in all_rows:
-            # If we reach the last row that's required by the user
-            if int(row[0]) == rows:
-                data_sets.append(dict(zip(headers, row)))
+        for row_number, row_data in enumerate(all_rows, 1):
+            data_sets.append(dict(zip(headers, row_data)))
+            if row_number == rows:  # If we have reached the required end
                 break
-            else:
-                data_sets.append(dict(zip(headers, row)))
     else:
         # Zip each row values to the headers and append them to data_sets
         [data_sets.append(dict(zip(headers, row))) for row in all_rows]
