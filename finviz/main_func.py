@@ -51,10 +51,30 @@ def get_news(ticker):
 
     page_parsed, _ = http_request_get(url=STOCK_URL, payload={'t': ticker}, parse=True)
     all_news = page_parsed.cssselect('a[class="tab-link-news"]')
+
+    dates = []
+    for i in range(len(all_news)):
+        tr = all_news[i].getparent().getparent()
+        date_str = tr[0].text.strip()
+        if ' ' not in date_str:
+            # This is only time, need to grab date from upper sibling news line.
+            tbody = tr.getparent()
+            previous_date_str = ''
+            j = 1
+            while ' ' not in previous_date_str:
+                try:
+                    previous_date_str = tbody[i-j][0].text.strip()
+                except IndexError:
+                    break
+                j += 1
+            # Combine date from earlier news with time from current news.
+            date_str = ' '.join([previous_date_str.split(' ')[0], date_str])
+        dates.append(date_str)
+
     headlines = [row.xpath('text()')[0] for row in all_news]
     urls = [row.get('href') for row in all_news]
 
-    return list(zip(headlines, urls))
+    return list(zip(dates, headlines, urls))
 
 
 def get_all_news():
