@@ -145,8 +145,8 @@ Downloading charts
     # size='m' > small
     # size='l' > large
     
-    # ta=True > display technical analysis
-    # ta=False > ignore technical analysis
+    # ta='1' > display technical analysis
+    # ta='0' > ignore technical analysis
     
 
 Documentation
