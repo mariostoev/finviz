@@ -133,7 +133,7 @@ Downloading charts
 .. code:: python
     
     # Monthly, Candles, Large, No Technical Analysis
-    stock_list.get_charts(period='m', chart_type='c', size='l', ta=False)
+    stock_list.get_charts(period='m', chart_type='c', size='l', ta='0')
     
     # period='d' > daily 
     # period='w' > weekly
