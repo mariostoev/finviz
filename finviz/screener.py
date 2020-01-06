@@ -62,7 +62,7 @@ class Screener(object):
 
         signal = ''
         if 's' in splitted_query:
-            order = splitted_query['s'][0]
+            signal = splitted_query['s'][0]
 
         return cls(tickers, filters, rows, order, signal, table, custom)
 
