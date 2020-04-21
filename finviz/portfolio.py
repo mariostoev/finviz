@@ -41,7 +41,8 @@ class Portfolio(object):
             auth_response.raise_for_status()
 
         # Get the parsed HTML and the URL of the base portfolio page
-        self._page_content, self.portfolio_url = http_request_get(url=PORTFOLIO_URL, session=self._session, parse=False)
+        self._page_content, self.portfolio_url = http_request_get(
+            url=PORTFOLIO_URL, session=self._session, parse=False)
 
         # If the user has not created a portfolio it redirects the request to <url>?v=2)
         if self.portfolio_url == f'{PORTFOLIO_URL}?v=2':
@@ -96,11 +97,23 @@ class Portfolio(object):
                 data['shares' + row_number_string] = row[3]
 
                 try:
+                    # empty string is no price, so try get today's price
+                    assert (data['price' + row_number_string] != '')
                     data['price' + row_number_string] = row[4]
-                except IndexError:
-                    current_price_page, _ = http_request_get(PRICE_REQUEST_URL, payload={'t': row[0]}, parse=True)
-                    data['price' + row_number_string] = current_price_page.text
+                except (IndexError, KeyError):
+                    current_price_page, _ = http_request_get(
+                        PRICE_REQUEST_URL, payload={'t': row[0]}, parse=True)
 
+                    # if price not available on finvz don't upload that ticker to portfolio
+                    if current_price_page.text == 'NA':
+                        print('Ticker {} not avialbel on finviz'.format(row[0])
+                              )
+                        del data['ticker' + row_number_string]
+                        del data['transaction' + row_number_string]
+                        del data['date' + row_number_string]
+                        del data['shares' + row_number_string]
+                    else:
+                        data['price' + row_number_string] = current_price_page.text
         self._session.post(PORTFOLIO_SUBMIT_URL, data=data)
 
     def __get_portfolio_url(self, portfolio_name):
