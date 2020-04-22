@@ -115,6 +115,8 @@ def get_analyst_price_targets(ticker, last_ratings=5):
     :return: list
     """
 
+    analyst_price_targets = []
+
     try:
         get_page(ticker)
         page_parsed = STOCK_PAGE[ticker]
@@ -123,7 +125,6 @@ def get_analyst_price_targets(ticker, last_ratings=5):
         ratings_list = [[val for val in row if val != '\n'] for row in ratings_list] #remove new line entries
 
         headers = ['date', 'category', 'analyst', 'rating', 'price_from', 'price_to'] # header names
-        analyst_price_targets = []
         count = 0
 
         for row in ratings_list:
