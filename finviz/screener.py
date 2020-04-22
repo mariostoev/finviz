@@ -116,6 +116,7 @@ class Screener(object):
         self._order = order
         self._signal = signal
 
+        self.analysis = []
         self.data = self.__search_screener()
 
     def __call__(self, tickers=None, filters=None, rows=None, order='', signal='', table=None, custom=None):
@@ -150,6 +151,7 @@ class Screener(object):
         if custom:
             self._custom = custom
 
+        self.analysis = []
         self.data = self.__search_screener()
 
     add = __call__
@@ -206,7 +208,14 @@ class Screener(object):
         :type filename: str
         """
 
-        return export_to_csv(self.headers, self.data, filename)
+        if filename.endswith('.csv'):
+            filename = filename[:-4]
+
+        if len(self.analysis) > 0:
+            export_to_csv(['ticker', 'date', 'category', 'analyst', 'rating', 'price_from', 'price_to'],
+                          self.analysis, '%s-analysts.csv' % filename)
+
+        return export_to_csv(self.headers, self.data, '%s.csv' % filename)
 
     def get_charts(self, period='d', size='l', chart_type='c', ta='1'):
         """
@@ -237,6 +246,33 @@ class Screener(object):
 
         async_connector = Connector(scrape.download_chart_image, chart_urls)
         async_connector.run_connector()
+
+
+    def get_ticker_details(self):
+        """
+        Downloads the details of all tickers shown by the table.
+        """
+
+        base_url = 'https://finviz.com/quote.ashx?'
+        ticker_urls = []
+
+        for row in self.data:
+            ticker_urls.append(base_url + f"&t={row.get('Ticker')}")
+
+        async_connector = Connector(scrape.download_ticker_details, ticker_urls, cssselect=True)
+        ticker_data = async_connector.run_connector()
+
+        for entry in ticker_data:
+            for key, value in entry.items():
+                for ticker_generic in self.data:
+                    if ticker_generic.get('Ticker') == key:
+                        if 'Sales' not in self.headers:
+                            self.headers.extend(list(value[0].keys()))
+
+                        ticker_generic.update(value[0])
+                        self.analysis.extend(value[1])
+
+        return self.data
 
     def __check_rows(self):
         """
