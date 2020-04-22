@@ -1,4 +1,4 @@
-from finviz.helper_functions.error_handling import InvalidPortfolioID, UnexistingPortfolioName, NoPortfolio
+from finviz.helper_functions.error_handling import InvalidPortfolioID, UnexistingPortfolioName, NoPortfolio, InvalidTicker
 from finviz.helper_functions.request_functions import http_request_get
 from finviz.helper_functions.scraper_functions import get_table, parse
 from finviz.helper_functions.display_functions import create_table_string
@@ -66,7 +66,7 @@ class Portfolio(object):
 
         return create_table_string(table_list)
 
-    def create_portfolio(self, name, file):
+    def create_portfolio(self, name, file, drop_invalid_ticker=False):
         """
         Creates a new portfolio from a .csv file.
 
@@ -75,6 +75,7 @@ class Portfolio(object):
         NVDA,2,14-04-2018,43,148.26
         AAPL,1,01-05-2019,12
         WMT,1,25-02-2015,20
+        ENGH:CA,1,,1,
 
         (!) For transaction - 1 = BUY, 2 = SELL
         (!) Note that if the price is ommited the function will take today's ticker price
@@ -106,8 +107,8 @@ class Portfolio(object):
 
                     # if price not available on finvz don't upload that ticker to portfolio
                     if current_price_page.text == 'NA':
-                        print('Ticker {} not avialbel on finviz'.format(row[0])
-                              )
+                        if drop_invalid_ticker == False:
+                            raise InvalidTicker(row[0])
                         del data['ticker' + row_number_string]
                         del data['transaction' + row_number_string]
                         del data['date' + row_number_string]
