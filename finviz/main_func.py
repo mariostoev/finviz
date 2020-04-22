@@ -115,36 +115,42 @@ def get_analyst_price_targets(ticker, last_ratings=5):
     :return: list
     """
 
-    get_page(ticker)
-    page_parsed = STOCK_PAGE[ticker]
-    table = page_parsed.cssselect('table[class="fullview-ratings-outer"]')[0]
-    ratings_list = [row.xpath('td//text()') for row in table]
-    ratings_list = [[val for val in row if val != '\n'] for row in ratings_list] #remove new line entries
+    try:
+        get_page(ticker)
+        page_parsed = STOCK_PAGE[ticker]
+        table = page_parsed.cssselect('table[class="fullview-ratings-outer"]')[0]
+        ratings_list = [row.xpath('td//text()') for row in table]
+        ratings_list = [[val for val in row if val != '\n'] for row in ratings_list] #remove new line entries
 
-    headers = ['date', 'category', 'analyst', 'rating', 'price_from', 'price_to'] # header names
-    analyst_price_targets = []
-    count = 0
+        headers = ['date', 'category', 'analyst', 'rating', 'price_from', 'price_to'] # header names
+        analyst_price_targets = []
+        count = 0
 
-    for row in ratings_list:
-        if count == last_ratings:
-            break
+        for row in ratings_list:
+            if count == last_ratings:
+                break
 
-        price_from, price_to = 0, 0  # defalut values for len(row) == 4 , that is there is NO price information
-        if len(row) == 5:
-            strings = row[4].split('→')
-            #print(strings)
-            if len(strings) == 1:
-                price_to = int(strings[0].strip(' ').strip('$'))   # if only ONE price is avalable then it is 'price_to' value
-            else:
-                price_from = int(strings[0].strip(' ').strip('$'))  # both '_from' & '_to' prices available
-                price_to = int(strings[1].strip(' ').strip('$'))
+            price_from, price_to = 0, 0  # defalut values for len(row) == 4 , that is there is NO price information
+            if len(row) == 5:
+                strings = row[4].split('→')
+                #print(strings)
+                if len(strings) == 1:
+                    price_to = strings[0].strip(' ').strip('$')   # if only ONE price is avalable then it is 'price_to' value
+                else:
+                    price_from = strings[0].strip(' ').strip('$')  # both '_from' & '_to' prices available
+                    price_to = strings[1].strip(' ').strip('$')
 
-        elements = row[:4]  # only take first 4 elements, discard last element if exists
-        elements.append(price_from)
-        elements.append(price_to)
-        elements[0] = datetime.datetime.strptime(elements[0], '%b-%d-%y').strftime('%Y-%m-%d') # convert date format
-        data = dict(zip(headers, elements))
-        analyst_price_targets.append(data)
-        count += 1
+            elements = row[:4]  # only take first 4 elements, discard last element if exists
+            elements.append(datetime.datetime.strptime(row[0], '%b-%d-%y').strftime('%Y-%m-%d')) # convert date format
+            elements.extend(row[1:3])
+            elements.append(row[3].replace('→', '->'))
+            elements.append(price_from)
+            elements.append(price_to)
+            data = dict(zip(headers, elements))
+            analyst_price_targets.append(data)
+            count += 1
+    except Exception as e:
+        #print("-> Exception: %s parsing analysts' ratings for ticker %s" % (str(e), ticker))
+        pass
 
     return analyst_price_targets
