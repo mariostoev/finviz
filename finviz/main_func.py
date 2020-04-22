@@ -1,9 +1,19 @@
 from finviz.helper_functions.request_functions import http_request_get
 from finviz.helper_functions.scraper_functions import get_table
+from finviz.helper_functions.save_data import STOCK_PAGE
+
+import datetime
 
 STOCK_URL = 'https://finviz.com/quote.ashx'
 NEWS_URL = 'https://finviz.com/news.ashx'
 CRYPTO_URL = 'https://finviz.com/crypto_performance.ashx'
+
+
+def get_page(ticker):
+    global STOCK_PAGE
+
+    if ticker not in STOCK_PAGE:
+        STOCK_PAGE[ticker], _ = http_request_get(url=STOCK_URL, payload={'t': ticker}, parse=True)
 
 
 def get_stock(ticker):
@@ -15,7 +25,8 @@ def get_stock(ticker):
     :return dict
     """
 
-    page_parsed, _ = http_request_get(url=STOCK_URL, payload={'t': ticker}, parse=True)
+    get_page(ticker)
+    page_parsed = STOCK_PAGE[ticker]
 
     title = page_parsed.cssselect('table[class="fullview-title"]')[0]
     keys = ['Company', 'Sector', 'Industry', 'Country']
@@ -39,7 +50,8 @@ def get_insider(ticker):
     :return: list
     """
 
-    page_parsed, _ = http_request_get(url=STOCK_URL, payload={'t': ticker}, parse=True)
+    get_page(ticker)
+    page_parsed = STOCK_PAGE[ticker]
     table = page_parsed.cssselect('table[class="body-table"]')[0]
     headers = table[0].xpath('td//text()')
     data = [dict(zip(headers, row.xpath('td//text()'))) for row in table[1:]]
@@ -55,7 +67,8 @@ def get_news(ticker):
     :return: list
     """
 
-    page_parsed, _ = http_request_get(url=STOCK_URL, payload={'t': ticker}, parse=True)
+    get_page(ticker)
+    page_parsed = STOCK_PAGE[ticker]
     all_news = page_parsed.cssselect('a[class="tab-link-news"]')
     headlines = [row.xpath('text()')[0] for row in all_news]
     urls = [row.get('href') for row in all_news]
@@ -70,7 +83,8 @@ def get_all_news():
     :return: list
     """
 
-    page_parsed, _ = http_request_get(url=NEWS_URL, parse=True)
+    get_page(ticker)
+    page_parsed = STOCK_PAGE[ticker]
     all_dates = [row.text_content() for row in page_parsed.cssselect('td[class="nn-date"]')]
     all_headlines = [row.text_content() for row in page_parsed.cssselect('a[class="nn-tab-link"]')]
     all_links = [row.get('href') for row in page_parsed.cssselect('a[class="nn-tab-link"]')]
@@ -101,9 +115,8 @@ def get_analyst_price_targets(ticker):
     :return: list
     """
 
-    import datetime
-
-    page_parsed, _ = http_request_get(url=STOCK_URL, payload={'t': ticker}, parse=True)
+    get_page(ticker)
+    page_parsed = STOCK_PAGE[ticker]
     table = page_parsed.cssselect('table[class="fullview-ratings-outer"]')[0]
     ratings_list = [row.xpath('td//text()') for row in table[1:]]
     ratings_list = [[val for val in row if val != '\n'] for row in ratings_list] #remove new line entries
