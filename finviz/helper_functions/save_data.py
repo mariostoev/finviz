@@ -3,8 +3,6 @@ import io
 import sqlite3
 import re
 
-STOCK_PAGE = {}
-
 
 def create_connection(sqlite_file):
     """ Creates a database connection. """
