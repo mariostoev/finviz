@@ -3,6 +3,8 @@ import io
 import sqlite3
 import re
 
+STOCK_PAGE = {}
+
 
 def create_connection(sqlite_file):
     """ Creates a database connection. """
@@ -22,12 +24,12 @@ def __write_csv_to_stream(stream, headers, data):
     dict_writer.writerows(data)
 
 
-def export_to_csv(headers, data, filename=None):
+def export_to_csv(headers, data, filename=None, mode='w', newline=''):
     """ Exports the generated table into a CSV file if a file is mentioned.
     Returns the CSV table as a string if no file is mentioned."""
 
     if filename:
-        with open(filename, 'w', newline='') as output_file:
+        with open(filename, mode, newline=newline) as output_file:
             __write_csv_to_stream(output_file, headers, data)
         return None
     stream = io.StringIO()
