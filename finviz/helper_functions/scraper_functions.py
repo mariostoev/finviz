@@ -1,5 +1,6 @@
 from lxml import etree
 from lxml import html
+import datetime
 import os
 
 
@@ -69,8 +70,64 @@ def download_chart_image(page_content, url):
     if not os.path.exists('charts'):
         os.mkdir('charts')
 
-    with open('charts/' + file_name, 'wb') as handle:
+    with open(os.path.join('charts', file_name), 'wb') as handle:
         handle.write(page_content)
+
+
+def get_analyst_price_targets_for_export(ticker=None, page_content=None, last_ratings=5):
+    analyst_price_targets = []
+
+    try:
+        table = page_content.cssselect('table[class="fullview-ratings-outer"]')[0]
+        ratings_list = [row.xpath('td//text()') for row in table]
+        ratings_list = [[val for val in row if val != '\n'] for row in ratings_list] #remove new line entries
+
+        headers = ['ticker', 'date', 'category', 'analyst', 'rating', 'price_from', 'price_to'] # header names
+        count = 0
+
+        for row in ratings_list:
+            if count == last_ratings:
+                break
+
+            price_from, price_to = 0, 0  # defalut values for len(row) == 4 , that is there is NO price information
+            if len(row) == 5:
+                strings = row[4].split('→')
+                #print(strings)
+                if len(strings) == 1:
+                    price_to = strings[0].strip(' ').strip('$')   # if only ONE price is avalable then it is 'price_to' value
+                else:
+                    price_from = strings[0].strip(' ').strip('$')  # both '_from' & '_to' prices available
+                    price_to = strings[1].strip(' ').strip('$')
+
+            elements = [ ticker ]
+            elements.append(datetime.datetime.strptime(row[0], '%b-%d-%y').strftime('%Y-%m-%d')) # convert date format
+            elements.extend(row[1:3])
+            elements.append(row[3].replace('→', '->'))
+            elements.append(price_from)
+            elements.append(price_to)
+            data = dict(zip(headers, elements))
+            analyst_price_targets.append(data)
+            count += 1
+    except Exception as e:
+        #print("-> Exception: %s parsing analysts' ratings for ticker %s" % (str(e), ticker))
+        pass
+
+    return analyst_price_targets
+
+def download_ticker_details(page_content, url):
+    data = {}
+    ticker = url.split('=')[1]
+    all_rows = [row.xpath('td//text()') for row in page_content.cssselect('tr[class="table-dark-row"]')]
+
+    for row in all_rows:
+        for column in range(0, 11):
+            if column % 2 == 0:
+                data[row[column]] = row[column + 1]
+
+    if len(data) == 0:
+        print("-> Unable to parse page for ticker %s" % ticker)
+
+    return {ticker: [data, get_analyst_price_targets_for_export(ticker, page_content)]}
 
 
 def parse(page):
