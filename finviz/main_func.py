@@ -15,8 +15,13 @@ def get_stock(ticker):
     :return dict
     """
 
-    data = {}
     page_parsed, _ = http_request_get(url=STOCK_URL, payload={'t': ticker}, parse=True)
+
+    title = page_parsed.cssselect('table[class="fullview-title"]')[0]
+    keys = ['Company', 'Sector', 'Industry', 'Country']
+    fields = [f.text_content() for f in title.cssselect('a[class="tab-link"]')]
+    data = dict(zip(keys, fields))
+
     all_rows = [row.xpath('td//text()') for row in page_parsed.cssselect('tr[class="table-dark-row"]')]
 
     for row in all_rows:
