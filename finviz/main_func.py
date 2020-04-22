@@ -107,7 +107,7 @@ def get_crypto(pair):
     return crypto_table_data[pair]
 
 
-def get_analyst_price_targets(ticker):
+def get_analyst_price_targets(ticker, last_ratings=5):
     """
     Returns a list of dictionaries containing all analyst ratings and Price targets
      - if any of 'price_from' or 'price_to' are not available in the DATA, then those values are set to default 0
@@ -123,8 +123,12 @@ def get_analyst_price_targets(ticker):
 
     headers = ['date', 'category', 'analyst', 'rating', 'price_from', 'price_to'] # header names
     analyst_price_targets = []
+    count = 0
 
     for row in ratings_list:
+        if count == last_ratings:
+            break
+
         price_from, price_to = 0, 0  # defalut values for len(row) == 4 , that is there is NO price information
         if len(row) == 5:
             strings = row[4].split('→')
@@ -141,5 +145,6 @@ def get_analyst_price_targets(ticker):
         elements[0] = datetime.datetime.strptime(elements[0], '%b-%d-%y').strftime('%Y-%m-%d') # convert date format
         data = dict(zip(headers, elements))
         analyst_price_targets.append(data)
+        count += 1
 
     return analyst_price_targets
