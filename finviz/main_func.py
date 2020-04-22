@@ -118,7 +118,7 @@ def get_analyst_price_targets(ticker):
     get_page(ticker)
     page_parsed = STOCK_PAGE[ticker]
     table = page_parsed.cssselect('table[class="fullview-ratings-outer"]')[0]
-    ratings_list = [row.xpath('td//text()') for row in table[1:]]
+    ratings_list = [row.xpath('td//text()') for row in table]
     ratings_list = [[val for val in row if val != '\n'] for row in ratings_list] #remove new line entries
 
     headers = ['date', 'category', 'analyst', 'rating', 'price_from', 'price_to'] # header names
