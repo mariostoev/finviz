@@ -53,7 +53,7 @@ Using Screener
     stock_list.to_csv()
 
     # Create a SQLite database 
-    stock_list.to_sqlite()
+    stock_list.to_sqlite("stock.sqlite3")
 
     for stock in stock_list[9:19]:  # Loop through 10th - 20th stocks 
         print(stock['Ticker'], stock['Price']) # Print symbol and price
