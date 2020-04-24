@@ -1,3 +1,6 @@
+from finviz.config import connection_settings
+
+
 class NoResults(Exception):
     """ Raise when there are no results found. """
 
@@ -38,8 +41,17 @@ class NoPortfolio(Exception):
 
 
 class InvalidTicker(Exception):
-    """ Raise when Ticker is not available on finviz or it is invalid Ticker. """
+    """ Raise when the given ticker is nonexistant or unavailable on FinViz.  """
 
     def __init__(self, ticker):
         super(InvalidTicker, self).__init__(
-            f'Invalid or not available ticker {ticker} on finviz')
+            f'Unable to find {ticker} since it is non-existent or unavailable on FinViz.')
+
+
+class ConnectionTimeout(Exception):
+    """ The request has timed out while trying to connect to the remote server. """
+
+    def __init__(self, webpage_link):
+        super(ConnectionTimeout, self).__init__(
+            f'Connection timed out after {connection_settings["CONNECTION_TIMEOUT"]} while trying to reach {webpage_link}'
+        )
