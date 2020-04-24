@@ -1,4 +1,4 @@
-from finviz.helper_functions.error_handling import InvalidPortfolioID, UnexistingPortfolioName, NoPortfolio
+from finviz.helper_functions.error_handling import InvalidPortfolioID, UnexistingPortfolioName, NoPortfolio, InvalidTicker
 from finviz.helper_functions.request_functions import http_request_get
 from finviz.helper_functions.scraper_functions import get_table, parse
 from finviz.helper_functions.display_functions import create_table_string
@@ -41,7 +41,8 @@ class Portfolio(object):
             auth_response.raise_for_status()
 
         # Get the parsed HTML and the URL of the base portfolio page
-        self._page_content, self.portfolio_url = http_request_get(url=PORTFOLIO_URL, session=self._session, parse=False)
+        self._page_content, self.portfolio_url = http_request_get(
+            url=PORTFOLIO_URL, session=self._session, parse=False)
 
         # If the user has not created a portfolio it redirects the request to <url>?v=2)
         if self.portfolio_url == f'{PORTFOLIO_URL}?v=2':
@@ -65,7 +66,7 @@ class Portfolio(object):
 
         return create_table_string(table_list)
 
-    def create_portfolio(self, name, file):
+    def create_portfolio(self, name, file, drop_invalid_ticker=False):
         """
         Creates a new portfolio from a .csv file.
 
@@ -74,6 +75,7 @@ class Portfolio(object):
         NVDA,2,14-04-2018,43,148.26
         AAPL,1,01-05-2019,12
         WMT,1,25-02-2015,20
+        ENGH:CA,1,,1,
 
         (!) For transaction - 1 = BUY, 2 = SELL
         (!) Note that if the price is ommited the function will take today's ticker price
@@ -96,11 +98,23 @@ class Portfolio(object):
                 data['shares' + row_number_string] = row[3]
 
                 try:
+                    # empty string is no price, so try get today's price
+                    assert (data['price' + row_number_string] != '')
                     data['price' + row_number_string] = row[4]
-                except IndexError:
-                    current_price_page, _ = http_request_get(PRICE_REQUEST_URL, payload={'t': row[0]}, parse=True)
-                    data['price' + row_number_string] = current_price_page.text
+                except (IndexError, KeyError):
+                    current_price_page, _ = http_request_get(
+                        PRICE_REQUEST_URL, payload={'t': row[0]}, parse=True)
 
+                    # if price not available on finvz don't upload that ticker to portfolio
+                    if current_price_page.text == 'NA':
+                        if drop_invalid_ticker == False:
+                            raise InvalidTicker(row[0])
+                        del data['ticker' + row_number_string]
+                        del data['transaction' + row_number_string]
+                        del data['date' + row_number_string]
+                        del data['shares' + row_number_string]
+                    else:
+                        data['price' + row_number_string] = current_price_page.text
         self._session.post(PORTFOLIO_SUBMIT_URL, data=data)
 
     def __get_portfolio_url(self, portfolio_name):
