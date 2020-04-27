@@ -1,3 +1,5 @@
+from finviz.helper_functions.error_handling import ConnectionTimeout
+from finviz.config import connection_settings
 from lxml import html
 import asyncio
 import aiohttp
@@ -13,42 +15,54 @@ def http_request_get(url, session=None, payload=None, parse=True):
     if payload is None:
         payload = {}
 
-    if session:
-        content = session.get(url, params=payload, verify=False, headers={'User-Agent': 'Mozilla/5.0'})
-    else:
-        content = requests.get(url, params=payload, verify=False, headers={'User-Agent': 'Mozilla/5.0'})
+    try:
+        if session:
+            content = session.get(url, proxy=PROXY_URL, params=payload, verify_ssl=False, headers={'User-Agent': 'Mozilla/5.0'})
+        else:
+            content = requests.get(url, proxies=PROXY_URL, params=payload, verify=False, headers={'User-Agent': 'Mozilla/5.0'})
 
-    content.raise_for_status()  # Raise HTTPError for bad requests (4xx or 5xx)
+        content.raise_for_status()  # Raise HTTPError for bad requests (4xx or 5xx)
 
-    if parse:
-        return html.fromstring(content.text), content.url
-    else:
-        return content.text, content.url
-
+        if parse:
+            return html.fromstring(content.text), content.url
+        else:
+            return content.text, content.url
+    except (asyncio.TimeoutError, requests.exceptions.Timeout) as e:
+        raise ConnectionTimeout(url)
 
 class Connector(object):
     """ Used to make asynchronous HTTP requests. """
 
-    def __init__(self, scrape_function, tasks, *args):
+    def __init__(self, scrape_function, tasks, *args, cssselect=False):
 
         self.scrape_function = scrape_function
         self.tasks = tasks
         self.arguments = args
+        self.cssselect = cssselect
         self.data = []
 
     async def __http_request__async(self, url, session):
         """ Sends asynchronous http request to URL address and scrapes the webpage. """
 
-        async with session.get(url, headers={'User-Agent': 'Mozilla/5.0'}) as response:
-            page_html = await response.read()
+        try:
+            async with session.get(url, proxy=PROXY_URL, headers={'User-Agent': 'Mozilla/5.0'}) as response:
+                page_html = await response.read()
 
-            return self.scrape_function(page_html, url=url, *self.arguments)
+                if self.cssselect is True:
+                    return self.scrape_function(html.fromstring(page_html), url=url, *self.arguments)
+                else:
+                    return self.scrape_function(page_html, url=url, *self.arguments)
+        except (asyncio.TimeoutError, requests.exceptions.Timeout) as e:
+            raise ConnectionTimeout(url)
 
     async def __async_scraper(self):
         """ Adds a URL's into a list of tasks and requests their response asynchronously. """
 
         async_tasks = []
-        async with aiohttp.ClientSession(headers={'User-Agent': 'Mozilla/5.0'}) as session:
+        conn = aiohttp.TCPConnector(limit_per_host=connection_settings['CONCURRENT_CONNECTIONS'])
+        timeout = aiohttp.ClientTimeout(total=connection_settings['CONNECTION_TIMEOUT'])
+
+        async with aiohttp.ClientSession(connector=conn, timeout=timeout, eaders={'User-Agent': 'Mozilla/5.0'}) as session:
             for n in self.tasks:
                 async_tasks.append(self.__http_request__async(n, session))
 
