@@ -76,7 +76,7 @@ def get_news(ticker):
     return list(zip(headlines, urls))
 
 
-def get_all_news():
+def get_all_news(ticker):
     """
     Returns a list of sets containing time, headline and url
 
