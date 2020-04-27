@@ -165,7 +165,6 @@ Downloading charts
     # ta='1' > display technical analysis
     # ta='0' > ignore technical analysis
     
-
 Documentation
 =====
 
@@ -181,3 +180,7 @@ You can contribute to the project by reporting bugs, suggesting enhancements, or
 
 .. image:: http://rickrduncan.com/wp-content/uploads/2017/11/buy-me-coffee-paypal.png
         :target: https://www.paypal.me/finvizapi
+
+Disclaimer
+-----
+*Using the library to acquire data from FinViz is against their Terms of Service and robots.txt. Use it responsively and at your own risk. This library is built purely for educational purposes.*
