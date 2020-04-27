@@ -14,9 +14,9 @@ def http_request_get(url, session=None, payload=None, parse=True):
         payload = {}
 
     if session:
-        content = session.get(url, params=payload, verify=False)
+        content = session.get(url, params=payload, verify=False, headers={'User-Agent': 'Mozilla/5.0'})
     else:
-        content = requests.get(url, params=payload, verify=False)
+        content = requests.get(url, params=payload, verify=False, headers={'User-Agent': 'Mozilla/5.0'})
 
     content.raise_for_status()  # Raise HTTPError for bad requests (4xx or 5xx)
 
@@ -39,7 +39,7 @@ class Connector(object):
     async def __http_request__async(self, url, session):
         """ Sends asynchronous http request to URL address and scrapes the webpage. """
 
-        async with session.get(url) as response:
+        async with session.get(url, headers={'User-Agent': 'Mozilla/5.0'}) as response:
             page_html = await response.read()
 
             return self.scrape_function(page_html, url=url, *self.arguments)
@@ -48,7 +48,7 @@ class Connector(object):
         """ Adds a URL's into a list of tasks and requests their response asynchronously. """
 
         async_tasks = []
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(headers={'User-Agent': 'Mozilla/5.0'}) as session:
             for n in self.tasks:
                 async_tasks.append(self.__http_request__async(n, session))
 
