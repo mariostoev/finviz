@@ -17,9 +17,9 @@ def http_request_get(url, session=None, payload=None, parse=True):
 
     try:
         if session:
-            content = session.get(url, proxy=PROXY_URL, params=payload, verify_ssl=False, headers={'User-Agent': 'Mozilla/5.0'})
+            content = session.get(url, params=payload, verify_ssl=False, headers={'User-Agent': 'Mozilla/5.0'})
         else:
-            content = requests.get(url, proxies=PROXY_URL, params=payload, verify=False, headers={'User-Agent': 'Mozilla/5.0'})
+            content = requests.get(url, params=payload, verify=False, headers={'User-Agent': 'Mozilla/5.0'})
 
         content.raise_for_status()  # Raise HTTPError for bad requests (4xx or 5xx)
 
@@ -45,7 +45,7 @@ class Connector(object):
         """ Sends asynchronous http request to URL address and scrapes the webpage. """
 
         try:
-            async with session.get(url, proxy=PROXY_URL, headers={'User-Agent': 'Mozilla/5.0'}) as response:
+            async with session.get(url, headers={'User-Agent': 'Mozilla/5.0'}) as response:
                 page_html = await response.read()
 
                 if self.cssselect is True:
@@ -62,7 +62,7 @@ class Connector(object):
         conn = aiohttp.TCPConnector(limit_per_host=connection_settings['CONCURRENT_CONNECTIONS'])
         timeout = aiohttp.ClientTimeout(total=connection_settings['CONNECTION_TIMEOUT'])
 
-        async with aiohttp.ClientSession(connector=conn, timeout=timeout, eaders={'User-Agent': 'Mozilla/5.0'}) as session:
+        async with aiohttp.ClientSession(connector=conn, timeout=timeout, headers={'User-Agent': 'Mozilla/5.0'}) as session:
             for n in self.tasks:
                 async_tasks.append(self.__http_request__async(n, session))
 
