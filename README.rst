@@ -8,19 +8,29 @@ finviz-api
 .. image:: https://img.shields.io/badge/python-3.6-blue.svg
     :target: https://www.python.org/downloads/release/python-360/
     
-.. image:: https://img.shields.io/github/stars/mariostoev/finviz.svg
-    :target: https://github.com/mariostoev/finviz/stargazers
-    :alt: Stargazers
-    
 .. image:: https://pepy.tech/badge/finviz
     :target: https://pepy.tech/project/finviz
     
 .. image:: http://hits.dwyl.io/mariostoev/finviz.svg
     :target: http://hits.dwyl.io/mariostoev/finviz
+    
 
-Installation
+Downloading & Installation
 -----
-The package has been uploaded to PyPi_, so you can install the latest release using:
+
+To download the latest version from GitHub:
+
+.. code:: bash
+
+    $ git clone https://github.com/mariostoev/finviz.git
+
+Then, run the setup.py file from the project directory
+
+.. code:: bash
+
+    $ sudo python setup.py install
+
+Alternatively, you can download and install the latest release on PyPi_ using:
 
 .. _PyPi: https://pypi.org/project/finviz/
 
@@ -41,13 +51,20 @@ Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and
 Using Screener
 =====
 
+Before using the Screener class, you have to manually go to the website's screener and enter your desired settings. The URL will automatically change every time you add a new setting. After you're done the URL will look something like this:
+
+.. image:: https://i.imgur.com/p8BLt06.png
+
+``?v=111&s=ta_newhigh&f=cap_largeover,exch_nasd,fa_fpe_o10&o=-ticker&t=ZM`` are the extra parameters provided to the screener. Those parameters are a list of key/value pairs separated with the & symbol. Some keys have a clear intent - ``f=cap_largeover,exch_nasd,fa_fpe_o10`` are filters, ``o=-ticker`` is order and ``t=ZM`` are tickers - yet, some are ambiguous like ``v=111``, which stands for the type of table. 
+
+To make matters easier inside the code you won't refer to tables by their number tag, but instead you will use their full name (ex. ``table=Performance``).
+
 .. code:: python
 
     from finviz.screener import Screener
 
     filters = ['exch_nasd', 'idx_sp500']  # Shows companies in NASDAQ which are in the S&P500
-    # Get the first 50 results sorted by price ascending
-    stock_list = Screener(filters=filters, order='price')
+    stock_list = Screener(filters=filters, table='Performance', order='price')  # Get the performance table and sort it by price ascending
 
     # Export the screener results to .csv 
     stock_list.to_csv()
@@ -148,7 +165,6 @@ Downloading charts
     # ta='1' > display technical analysis
     # ta='0' > ignore technical analysis
     
-
 Documentation
 =====
 
@@ -164,3 +180,7 @@ You can contribute to the project by reporting bugs, suggesting enhancements, or
 
 .. image:: http://rickrduncan.com/wp-content/uploads/2017/11/buy-me-coffee-paypal.png
         :target: https://www.paypal.me/finvizapi
+
+Disclaimer
+-----
+*Using the library to acquire data from FinViz is against their Terms of Service and robots.txt. Use it responsively and at your own risk. This library is built purely for educational purposes.*

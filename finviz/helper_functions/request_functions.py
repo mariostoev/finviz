@@ -1,3 +1,5 @@
+from finviz.helper_functions.error_handling import ConnectionTimeout
+from finviz.config import connection_settings
 from lxml import html
 import asyncio
 import aiohttp
@@ -6,13 +8,6 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-CONCURRENT_CONNECTIONS = 20
-CONNECTION_TIMEOUT = 3000
-PROXY_URL = 'http://127.0.0.1:8080'
-PROXIES = {
-    'http': PROXY_URL,
-    'https': PROXY_URL
-}
 
 def http_request_get(url, session=None, payload=None, parse=True):
     """ Sends a GET HTTP request to a website and returns its HTML content and full url address. """
@@ -22,9 +17,9 @@ def http_request_get(url, session=None, payload=None, parse=True):
 
     try:
         if session:
-            content = session.get(url, proxy=PROXY_URL, params=payload, verify_ssl=False)
+            content = session.get(url, proxy=PROXY_URL, params=payload, verify_ssl=False, headers={'User-Agent': 'Mozilla/5.0'})
         else:
-            content = requests.get(url, proxies=PROXIES, params=payload, verify=False)
+            content = requests.get(url, proxies=PROXY_URL, params=payload, verify=False, headers={'User-Agent': 'Mozilla/5.0'})
 
         content.raise_for_status()  # Raise HTTPError for bad requests (4xx or 5xx)
 
@@ -33,9 +28,7 @@ def http_request_get(url, session=None, payload=None, parse=True):
         else:
             return content.text, content.url
     except (asyncio.TimeoutError, requests.exceptions.Timeout) as e:
-        print("Timed out while retrieving %s" % url)
-    except Exception as e:
-        print("Error retrieving %s (%s)" % (url, str(e)))
+        raise ConnectionTimeout(url)
 
 class Connector(object):
     """ Used to make asynchronous HTTP requests. """
@@ -52,7 +45,7 @@ class Connector(object):
         """ Sends asynchronous http request to URL address and scrapes the webpage. """
 
         try:
-            async with session.get(url, proxy=PROXY_URL, verify_ssl=False) as response:
+            async with session.get(url, proxy=PROXY_URL, headers={'User-Agent': 'Mozilla/5.0'}) as response:
                 page_html = await response.read()
 
                 if self.cssselect is True:
@@ -60,18 +53,16 @@ class Connector(object):
                 else:
                     return self.scrape_function(page_html, url=url, *self.arguments)
         except (asyncio.TimeoutError, requests.exceptions.Timeout) as e:
-            print("Timed out while retrieving %s" % url)
-        except Exception as e:
-            print("Error retrieving %s (%s)" % (url, str(e)))
+            raise ConnectionTimeout(url)
 
     async def __async_scraper(self):
         """ Adds a URL's into a list of tasks and requests their response asynchronously. """
 
         async_tasks = []
-        conn = aiohttp.TCPConnector(limit_per_host=CONCURRENT_CONNECTIONS)
-        timeout = aiohttp.ClientTimeout(total=CONNECTION_TIMEOUT)
+        conn = aiohttp.TCPConnector(limit_per_host=connection_settings['CONCURRENT_CONNECTIONS'])
+        timeout = aiohttp.ClientTimeout(total=connection_settings['CONNECTION_TIMEOUT'])
 
-        async with aiohttp.ClientSession(connector=conn, timeout=timeout) as session:
+        async with aiohttp.ClientSession(connector=conn, timeout=timeout, eaders={'User-Agent': 'Mozilla/5.0'}) as session:
             for n in self.tasks:
                 async_tasks.append(self.__http_request__async(n, session))
 
