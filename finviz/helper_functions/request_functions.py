@@ -1,5 +1,6 @@
 from finviz.helper_functions.error_handling import ConnectionTimeout
 from finviz.config import connection_settings
+from user_agent import generate_user_agent
 from lxml import html
 import asyncio
 import aiohttp
@@ -17,9 +18,9 @@ def http_request_get(url, session=None, payload=None, parse=True):
 
     try:
         if session:
-            content = session.get(url, params=payload, verify_ssl=False, headers={'User-Agent': 'Mozilla/5.0'})
+            content = session.get(url, params=payload, verify_ssl=False, headers={'User-Agent': generate_user_agent()})
         else:
-            content = requests.get(url, params=payload, verify=False, headers={'User-Agent': 'Mozilla/5.0'})
+            content = requests.get(url, params=payload, verify=False, headers={'User-Agent': generate_user_agent()})
 
         content.raise_for_status()  # Raise HTTPError for bad requests (4xx or 5xx)
 
@@ -27,8 +28,9 @@ def http_request_get(url, session=None, payload=None, parse=True):
             return html.fromstring(content.text), content.url
         else:
             return content.text, content.url
-    except (asyncio.TimeoutError, requests.exceptions.Timeout) as e:
+    except (asyncio.TimeoutError, requests.exceptions.Timeout):
         raise ConnectionTimeout(url)
+
 
 class Connector(object):
     """ Used to make asynchronous HTTP requests. """
@@ -45,14 +47,14 @@ class Connector(object):
         """ Sends asynchronous http request to URL address and scrapes the webpage. """
 
         try:
-            async with session.get(url, headers={'User-Agent': 'Mozilla/5.0'}) as response:
+            async with session.get(url, headers={'User-Agent': generate_user_agent()}) as response:
                 page_html = await response.read()
 
                 if self.cssselect is True:
                     return self.scrape_function(html.fromstring(page_html), url=url, *self.arguments)
                 else:
                     return self.scrape_function(page_html, url=url, *self.arguments)
-        except (asyncio.TimeoutError, requests.exceptions.Timeout) as e:
+        except (asyncio.TimeoutError, requests.exceptions.Timeout):
             raise ConnectionTimeout(url)
 
     async def __async_scraper(self):
@@ -62,7 +64,9 @@ class Connector(object):
         conn = aiohttp.TCPConnector(limit_per_host=connection_settings['CONCURRENT_CONNECTIONS'])
         timeout = aiohttp.ClientTimeout(total=connection_settings['CONNECTION_TIMEOUT'])
 
-        async with aiohttp.ClientSession(connector=conn, timeout=timeout, headers={'User-Agent': 'Mozilla/5.0'}) as session:
+        async with aiohttp.ClientSession(connector=conn,
+                                         timeout=timeout,
+                                         headers={'User-Agent': generate_user_agent()}) as session:
             for n in self.tasks:
                 async_tasks.append(self.__http_request__async(n, session))
 
