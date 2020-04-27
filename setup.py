@@ -11,14 +11,15 @@ setup(
   author = 'Mario Stoev',
   author_email = 'bg.mstoev@gmail.com',
   url = 'https://github.com/mariostoev/finviz',
-  download_url = 'https://github.com/mariostoev/finviz/archive/1.3.0.tar.gz',
+  download_url = 'https://github.com/mariostoev/finviz/archive/1.3.2.tar.gz',
   keywords = ['finviz', 'api', 'screener', 'finviz api', 'charts', 'scraper'],
   install_requires=[
           'lxml',
           'requests',
           'aiohttp',
           'urllib3',
-          'cssselect'
+          'cssselect',
+          'user_agent'
       ],
   classifiers=[
     'Development Status :: 5 - Production/Stable',
