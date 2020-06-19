@@ -67,7 +67,7 @@ To make matters easier inside the code you won't refer to tables by their number
     stock_list = Screener(filters=filters, table='Performance', order='price')  # Get the performance table and sort it by price ascending
 
     # Export the screener results to .csv 
-    stock_list.to_csv()
+    stock_list.to_csv("stock.csv")
 
     # Create a SQLite database 
     stock_list.to_sqlite("stock.sqlite3")
