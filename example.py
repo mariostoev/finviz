@@ -2,9 +2,15 @@
 
 from finviz.helper_functions.save_data import export_to_db, export_to_csv
 from finviz.screener import Screener
-from finviz.main_func import *
 
-#filters = []
+# Get dict of available filters
+# filters dict contains the corresponding filter tags
+filters = Screener.load_filter_dict()
+some_filters = [filters['PEG']['Under 1'],
+                filters['Exchange']['AMEX']]
+stock_list = Screener(filters=some_filters, order='ticker')
+
+# Use raw filter tags in a list
 #filters = ['geo_usa']
 filters = ['idx_sp500']  # Shows companies in the S&P500
 print("Filtering stocks..")
