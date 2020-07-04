@@ -18,7 +18,7 @@ finviz-api
 Downloading & Installation
 -----
 
-    $ pip install -U git+https://github.com/alpacahq/alpaca-trade-api-python
+    $ pip install -U git+https://github.com/jaggas/finviz
 
 
 What is Finviz?
