@@ -139,13 +139,11 @@ def get_analyst_price_targets(ticker, last_ratings=5):
         for row in ratings_list:
             if count == last_ratings:
                 break
-            print(f"row_{count} - {row}")
             # defalut values for len(row) == 4 , that is there is NO price information
             price_from, price_to = 0, 0
             if len(row) == 5:
 
                 strings = row[4].split('→')
-                print(f"strings = {strings}")
                 # print(strings)
                 if len(strings) == 1:
                     # if only ONE price is avalable then it is 'price_to' value
@@ -154,7 +152,6 @@ def get_analyst_price_targets(ticker, last_ratings=5):
                     # both '_from' & '_to' prices available
                     price_from = strings[0].strip(' ').strip('$')
                     price_to = strings[1].strip(' ').strip('$')
-            # print(f'from:{price_from} -> {price_to}')
             # only take first 4 elements, discard last element if exists
             elements = row[:4]
             elements.append(datetime.datetime.strptime(
