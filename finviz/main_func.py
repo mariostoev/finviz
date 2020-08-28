@@ -13,7 +13,8 @@ def get_page(ticker):
     global STOCK_PAGE
 
     if ticker not in STOCK_PAGE:
-        STOCK_PAGE[ticker], _ = http_request_get(url=STOCK_URL, payload={'t': ticker}, parse=True)
+        STOCK_PAGE[ticker], _ = http_request_get(
+            url=STOCK_URL, payload={'t': ticker}, parse=True)
 
 
 def get_stock(ticker):
@@ -33,7 +34,8 @@ def get_stock(ticker):
     fields = [f.text_content() for f in title.cssselect('a[class="tab-link"]')]
     data = dict(zip(keys, fields))
 
-    all_rows = [row.xpath('td//text()') for row in page_parsed.cssselect('tr[class="table-dark-row"]')]
+    all_rows = [row.xpath('td//text()')
+                for row in page_parsed.cssselect('tr[class="table-dark-row"]')]
 
     for row in all_rows:
         for column in range(0, 11, 2):
@@ -85,9 +87,12 @@ def get_all_news(ticker):
 
     get_page(ticker)
     page_parsed = STOCK_PAGE[ticker]
-    all_dates = [row.text_content() for row in page_parsed.cssselect('td[class="nn-date"]')]
-    all_headlines = [row.text_content() for row in page_parsed.cssselect('a[class="nn-tab-link"]')]
-    all_links = [row.get('href') for row in page_parsed.cssselect('a[class="nn-tab-link"]')]
+    all_dates = [row.text_content()
+                 for row in page_parsed.cssselect('td[class="nn-date"]')]
+    all_headlines = [row.text_content()
+                     for row in page_parsed.cssselect('a[class="nn-tab-link"]')]
+    all_links = [row.get('href')
+                 for row in page_parsed.cssselect('a[class="nn-tab-link"]')]
 
     return list(zip(all_dates, all_headlines, all_links))
 
@@ -101,7 +106,8 @@ def get_crypto(pair):
 
     page_parsed, _ = http_request_get(url=CRYPTO_URL, parse=True)
     page_html, _ = http_request_get(url=CRYPTO_URL, parse=False)
-    crypto_headers = page_parsed.cssselect('tr[valign="middle"]')[0].xpath('td//text()')
+    crypto_headers = page_parsed.cssselect('tr[valign="middle"]')[
+        0].xpath('td//text()')
     crypto_table_data = get_table(page_html, crypto_headers)
 
     return crypto_table_data[pair]
@@ -120,34 +126,54 @@ def get_analyst_price_targets(ticker, last_ratings=5):
     try:
         get_page(ticker)
         page_parsed = STOCK_PAGE[ticker]
-        table = page_parsed.cssselect('table[class="fullview-ratings-outer"]')[0]
+        table = page_parsed.cssselect(
+            'table[class="fullview-ratings-outer"]')[0]
         ratings_list = [row.xpath('td//text()') for row in table]
-        ratings_list = [[val for val in row if val != '\n'] for row in ratings_list] #remove new line entries
+        ratings_list = [[val for val in row if val != '\n']
+                        for row in ratings_list]  # remove new line entries
 
-        headers = ['date', 'category', 'analyst', 'rating', 'price_from', 'price_to'] # header names
+        headers = ['date', 'category', 'analyst', 'rating',
+                   'price_from', 'price_to']  # header names
         count = 0
 
         for row in ratings_list:
             if count == last_ratings:
                 break
-
-            price_from, price_to = 0, 0  # defalut values for len(row) == 4 , that is there is NO price information
+            print(f"row_{count} - {row}")
+            # defalut values for len(row) == 4 , that is there is NO price information
+            price_from, price_to = 0, 0
             if len(row) == 5:
-                strings = row[4].split('→')
-                #print(strings)
-                if len(strings) == 1:
-                    price_to = strings[0].strip(' ').strip('$')   # if only ONE price is avalable then it is 'price_to' value
-                else:
-                    price_from = strings[0].strip(' ').strip('$')  # both '_from' & '_to' prices available
-                    price_to = strings[1].strip(' ').strip('$')
 
-            elements = row[:4]  # only take first 4 elements, discard last element if exists
-            elements.append(datetime.datetime.strptime(row[0], '%b-%d-%y').strftime('%Y-%m-%d')) # convert date format
+                strings = row[4].split('→')
+                print(f"strings = {strings}")
+                # print(strings)
+                if len(strings) == 1:
+                    # if only ONE price is avalable then it is 'price_to' value
+                    price_to = strings[0].strip(' ').strip('$')
+                else:
+                    # both '_from' & '_to' prices available
+                    price_from = strings[0].strip(' ').strip('$')
+                    price_to = strings[1].strip(' ').strip('$')
+            # print(f'from:{price_from} -> {price_to}')
+            # only take first 4 elements, discard last element if exists
+            elements = row[:4]
+            elements.append(datetime.datetime.strptime(
+                row[0], '%b-%d-%y').strftime('%Y-%m-%d'))  # convert date format
             elements.extend(row[1:3])
             elements.append(row[3].replace('→', '->'))
             elements.append(price_from)
             elements.append(price_to)
-            data = dict(zip(headers, elements))
+
+            data = {
+                'date': elements[0],
+                'category':elements[1], 
+                'analyst': elements[2],
+                'rating':elements[3],
+                'price_from':float(price_from),
+                'price_to':float(price_to)
+            }
+
+            print(data)
             analyst_price_targets.append(data)
             count += 1
     except Exception as e:
