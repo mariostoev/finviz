@@ -169,8 +169,7 @@ def get_analyst_price_targets(ticker, last_ratings=5):
                 'price_from':float(price_from),
                 'price_to':float(price_to)
             }
-
-            print(data)
+            
             analyst_price_targets.append(data)
             count += 1
     except Exception as e:
