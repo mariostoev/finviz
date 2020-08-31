@@ -208,7 +208,7 @@ class Screener(object):
         :type filename: str
         """
 
-        if filename.endswith('.csv'):
+        if filename and filename.endswith('.csv'):
             filename = filename[:-4]
 
         if len(self.analysis) > 0:
