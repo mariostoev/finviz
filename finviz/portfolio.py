@@ -4,6 +4,7 @@ from finviz.helper_functions.scraper_functions import get_table, parse
 from finviz.helper_functions.display_functions import create_table_string
 import requests
 import csv
+from user_agent import generate_user_agent
 
 
 LOGIN_URL = 'https://finviz.com/login_submit.ashx'
@@ -35,7 +36,7 @@ class Portfolio(object):
 
         # Create a session and log in by sending a POST request
         self._session = requests.session()
-        auth_response = self._session.post(LOGIN_URL, data=payload)
+        auth_response = self._session.post(LOGIN_URL, data=payload, headers={'User-Agent': generate_user_agent()})
 
         if not auth_response.ok:  # If the post request wasn't successful
             auth_response.raise_for_status()

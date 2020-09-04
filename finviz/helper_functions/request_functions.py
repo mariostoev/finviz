@@ -18,7 +18,7 @@ def http_request_get(url, session=None, payload=None, parse=True):
 
     try:
         if session:
-            content = session.get(url, params=payload, verify_ssl=False, headers={'User-Agent': generate_user_agent()})
+            content = session.get(url, params=payload, verify=False, headers={'User-Agent': generate_user_agent()})
         else:
             content = requests.get(url, params=payload, verify=False, headers={'User-Agent': generate_user_agent()})
 
