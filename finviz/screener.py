@@ -200,7 +200,7 @@ class Screener(object):
 
         export_to_db(self.headers, self.data, filename)
 
-    def to_csv(self, filename=None):
+    def to_csv(self, filename: str):
         """ Exports the generated table into a CSV file.
         Returns a CSV string if filename is None.
 
