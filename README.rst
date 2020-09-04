@@ -18,25 +18,8 @@ finviz-api
 Downloading & Installation
 -----
 
-To download the latest version from GitHub:
+    $ pip install -U git+https://github.com/jaggas/finviz
 
-.. code:: bash
-
-    $ git clone https://github.com/mariostoev/finviz.git
-
-Then, run the setup.py file from the project directory
-
-.. code:: bash
-
-    $ sudo python setup.py install
-
-Alternatively, you can download and install the latest release on PyPi_ using:
-
-.. _PyPi: https://pypi.org/project/finviz/
-
-.. code:: bash
-
-   $ pip install finviz
 
 What is Finviz?
 =====

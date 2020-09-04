@@ -3,7 +3,11 @@ from finviz.helper_functions.error_handling import NoResults, InvalidTableType
 from finviz.helper_functions.save_data import export_to_db, export_to_csv
 from finviz.helper_functions.display_functions import create_table_string
 from urllib.parse import urlencode, urlparse, parse_qs as urlparse_qs
+import urllib.request
 import finviz.helper_functions.scraper_functions as scrape
+from bs4 import BeautifulSoup
+import json
+import pathlib
 
 TABLE_TYPES = {
     'Overview': '111',
@@ -247,7 +251,6 @@ class Screener(object):
         async_connector = Connector(scrape.download_chart_image, chart_urls)
         async_connector.run_connector()
 
-
     def get_ticker_details(self):
         """
         Downloads the details of all tickers shown by the table.
@@ -307,13 +310,13 @@ class Screener(object):
         """ Private function used to return data from the FinViz screener. """
 
         self._page_content, self._url = http_request_get('https://finviz.com/screener.ashx', payload={
-                                                   'v': self._table,
-                                                   't': ','.join(self._tickers),
-                                                   'f': ','.join(self._filters),
-                                                   'o': self._order,
-                                                   's': self._signal,
-                                                   'c': ','.join(self._custom)
-                                                   })
+            'v': self._table,
+            't': ','.join(self._tickers),
+            'f': ','.join(self._filters),
+            'o': self._order,
+            's': self._signal,
+            'c': ','.join(self._custom)
+        })
 
         self._rows = self.__check_rows()
         self.headers = self.__get_table_headers()
@@ -331,3 +334,86 @@ class Screener(object):
                 data.append(row)
 
         return data
+
+    @staticmethod
+    def load_filter_dict(reload=True):
+        """
+        Get dict of available filters. File containing json specification of filters will be built if it doesn't exist
+        or if reload is False
+        """
+
+        # Get location of filter.json
+        json_directory = pathlib.Path(__file__).parent
+        json_file = pathlib.Path.joinpath(json_directory, 'filters.json')
+
+        # Reload the filters JSON file if present and requested
+        if reload and json_file.is_file():
+            with open(json_file, 'r') as fp:
+                return json.load(fp)
+
+        # Get html from main filter page, ft=4 ensures all filters are present
+        hdr = {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'}
+        url = "https://finviz.com/screener.ashx?ft=4"
+        req = urllib.request.Request(url, headers=hdr)
+        with urllib.request.urlopen(req) as response:
+            html = response.read().decode('utf-8')
+
+        # Parse html and locate table we are interested in.
+        # Use one of the text values and get the parent table from that
+        bs = BeautifulSoup(html, 'html.parser')
+        filters_table = None
+        for td in bs.find_all('td'):
+            if td.get_text().strip() == 'Exchange':
+                filters_table = td.find_parent('table')
+        if filters_table is None:
+            raise Exception('Could not locate filter parameters')
+
+        # Delete all div tags, we don't need them
+        for div in filters_table.find_all('div'):
+            div.decompose()
+
+        # Populate dict with filtering options and corresponding filter tags
+        filter_dict = dict()
+        td_list = filters_table.find_all('td')
+
+        for i in range(0, len(td_list) - 2, 2):
+            current_dict = dict()
+            if td_list[i].get_text().strip() == "":
+                continue
+
+            # Even td elements contain filter name (as shown on web page)
+            filter_text = td_list[i].get_text().strip()
+
+            # Odd td elements contain the filter tag and options
+            selections = td_list[i + 1].find('select')
+            filter_name = selections.get('data-filter').strip()
+
+            # Store filter options for current filter
+            options = selections.find_all('option', {'value': True})
+            for opt in options:
+                # Encoded filter string
+                value = opt.get('value').strip()
+
+                # String shown in pull-down menu
+                text = opt.get_text()
+
+                # Filter out unwanted items
+                if value == '' or "Elite" in text:
+                    continue
+
+                # Make filter string and store in dict
+                current_dict[text] = filter_name + "_" + value
+
+            # Store current filter dict
+            filter_dict[filter_text] = current_dict
+
+        # Save filter dict to finviz directory
+        try:
+            with open(json_file, 'w') as fp:
+                json.dump(filter_dict, fp)
+        except Exception as e:
+            print(e)
+            print('Unable to write to file{}'.format(json_file))
+
+        return filter_dict
