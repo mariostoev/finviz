@@ -6,6 +6,7 @@ import asyncio
 import aiohttp
 import requests
 import urllib3
+import time
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -18,7 +19,7 @@ def http_request_get(url, session=None, payload=None, parse=True):
 
     try:
         if session:
-            content = session.get(url, params=payload, verify=False, headers={'User-Agent': generate_user_agent()})
+            content = session.get(url, params=payload, verify_ssl=False, headers={'User-Agent': generate_user_agent()})
         else:
             content = requests.get(url, params=payload, verify=False, headers={'User-Agent': generate_user_agent()})
 
@@ -45,15 +46,21 @@ class Connector(object):
 
     async def __http_request__async(self, url, session):
         """ Sends asynchronous http request to URL address and scrapes the webpage. """
-
         try:
-            async with session.get(url, headers={'User-Agent': generate_user_agent()}) as response:
-                page_html = await response.read()
+            while True:
+                async with session.get(url, headers={'User-Agent': generate_user_agent()}) as response:
+                    page_html = await response.read()
+                
+                if page_html.startswith(b'Too many requests'):
+                    time.sleep(0.01)
+                    continue
+                break
+        
+            if self.cssselect is True:
+                return self.scrape_function(html.fromstring(page_html), url=url, *self.arguments)
+            else:
+                return self.scrape_function(page_html, url=url, *self.arguments)
 
-                if self.cssselect is True:
-                    return self.scrape_function(html.fromstring(page_html), url=url, *self.arguments)
-                else:
-                    return self.scrape_function(page_html, url=url, *self.arguments)
         except (asyncio.TimeoutError, requests.exceptions.Timeout):
             raise ConnectionTimeout(url)
 
