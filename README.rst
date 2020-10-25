@@ -18,7 +18,7 @@ finviz-api
 Downloading & Installation
 -----
 
-    $ pip install -U git+https://github.com/jaggas/finviz
+    $ pip install -U git+https://github.com/mariostoev/finviz
     OR
     $ pip install finviz
 
@@ -163,7 +163,7 @@ You can contribute to the project by reporting bugs, suggesting enhancements, or
 
 *You can also buy me a coffee!*
 
-.. image:: http://rickrduncan.com/wp-content/uploads/2017/11/buy-me-coffee-paypal.png
+.. image:: https://hasutsuki.com/wp-content/uploads/2018/06/buy-me-a-coffee-with-paypal.png
         :target: https://www.paypal.me/finvizapi
 
 Disclaimer
