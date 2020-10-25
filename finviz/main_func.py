@@ -1,7 +1,7 @@
+import datetime
+
 from finviz.helper_functions.request_functions import http_request_get
 from finviz.helper_functions.scraper_functions import get_table
-
-import datetime
 
 STOCK_URL = 'https://finviz.com/quote.ashx'
 NEWS_URL = 'https://finviz.com/news.ashx'

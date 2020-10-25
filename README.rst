@@ -19,13 +19,15 @@ Downloading & Installation
 -----
 
     $ pip install -U git+https://github.com/jaggas/finviz
+    OR
+    $ pip install finviz
 
 
 What is Finviz?
 =====
 FinViz_ aims to make market information accessible and provides a lot of data in visual snapshots, allowing traders and investors to quickly find the stock, future or forex pair they are looking for. The site provides advanced screeners, market maps, analysis, comparative tools and charts.
 
-.. _FinViz: https://finviz.com/
+.. _FinViz: https://finviz.com/?a=128493348
 
 **Important Information**
 
@@ -166,4 +168,4 @@ You can contribute to the project by reporting bugs, suggesting enhancements, or
 
 Disclaimer
 -----
-*Using the library to acquire data from FinViz is against their Terms of Service and robots.txt. Use it responsively and at your own risk. This library is built purely for educational purposes.*
+*Using the library to acquire data from FinViz is against their Terms of Service and robots.txt. Use it responsibly and at your own risk. This library is built purely for educational purposes.*

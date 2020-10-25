@@ -1,15 +1,14 @@
-from lxml import etree
-from lxml import html
 import datetime
 import os
 
+from lxml import etree, html
 
-def get_table(page_html, headers, rows=None, url=None):
-    """ Private function used to return table data inside a list of dictonaries. """
 
-    page_parsed = parse(page_html)
+def get_table(page_html, headers, rows=None, **kwargs):
+    """ Private function used to return table data inside a list of dictionaries. """
+    page_parsed = html.fromstring(page_html)
     # When we call this method from Portfolio we don't fill the rows argument.
-    # Conversly, we always fill the rows argument when we call this method from Screener.
+    # Conversely, we always fill the rows argument when we call this method from Screener.
     # Also, in the portfolio page, we don't need the last row - it's redundant.
     if rows is None:
         rows = -2  # We'll increment it later (-1) and use it to cut the last row
@@ -80,19 +79,18 @@ def get_analyst_price_targets_for_export(ticker=None, page_content=None, last_ra
     try:
         table = page_content.cssselect('table[class="fullview-ratings-outer"]')[0]
         ratings_list = [row.xpath('td//text()') for row in table]
-        ratings_list = [[val for val in row if val != '\n'] for row in ratings_list] #remove new line entries
+        ratings_list = [[val for val in row if val != '\n'] for row in ratings_list]  # remove new line entries
 
-        headers = ['ticker', 'date', 'category', 'analyst', 'rating', 'price_from', 'price_to'] # header names
+        headers = ['ticker', 'date', 'category', 'analyst', 'rating', 'price_from', 'price_to']  # header names
         count = 0
 
         for row in ratings_list:
             if count == last_ratings:
                 break
 
-            price_from, price_to = 0, 0  # defalut values for len(row) == 4 , that is there is NO price information
+            price_from, price_to = 0, 0  # default values for len(row) == 4 , that is there is NO price information
             if len(row) == 5:
                 strings = row[4].split('→')
-                #print(strings)
                 if len(strings) == 1:
                     price_to = strings[0].strip(' ').strip('$')   # if only ONE price is avalable then it is 'price_to' value
                 else:
@@ -108,16 +106,18 @@ def get_analyst_price_targets_for_export(ticker=None, page_content=None, last_ra
             data = dict(zip(headers, elements))
             analyst_price_targets.append(data)
             count += 1
-    except Exception as e:
-        #print("-> Exception: %s parsing analysts' ratings for ticker %s" % (str(e), ticker))
+    except Exception as exc:
+        # print(f"-> Exception: {exc} parsing analysts' ratings for ticker {ticker}")
         pass
 
     return analyst_price_targets
 
-def download_ticker_details(page_content, url):
+
+def download_ticker_details(page_content, **kwargs):
     data = {}
-    ticker = url.split('=')[1]
-    all_rows = [row.xpath('td//text()') for row in page_content.cssselect('tr[class="table-dark-row"]')]
+    ticker = kwargs["URL"].split('=')[1]
+    page_parsed = html.fromstring(page_content)
+    all_rows = [row.xpath('td//text()') for row in page_parsed.cssselect('tr[class="table-dark-row"]')]
 
     for row in all_rows:
         for column in range(0, 11):
@@ -125,11 +125,7 @@ def download_ticker_details(page_content, url):
                 data[row[column]] = row[column + 1]
 
     if len(data) == 0:
-        print("-> Unable to parse page for ticker %s" % ticker)
+        print(f"-> Unable to parse page for ticker: {ticker}")
 
     return {ticker: [data, get_analyst_price_targets_for_export(ticker, page_content)]}
 
-
-def parse(page):
-    """ Parses the HTML contents of a page. """
-    return html.fromstring(page)

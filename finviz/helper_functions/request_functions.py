@@ -1,11 +1,18 @@
-from finviz.helper_functions.error_handling import ConnectionTimeout
-from finviz.config import connection_settings
-from user_agent import generate_user_agent
-from lxml import html
 import asyncio
+import time
+from typing import Callable, Dict, List
+
 import aiohttp
 import requests
 import urllib3
+from lxml import html
+from user_agent import generate_user_agent
+
+from finviz.config import connection_settings
+from finviz.helper_functions.error_handling import (
+    ConnectionTimeout,
+    TooManyRequests
+)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -32,28 +39,45 @@ def http_request_get(url, session=None, payload=None, parse=True):
         raise ConnectionTimeout(url)
 
 
-class Connector(object):
+def sequential_data_scrape(scrape_func: Callable, urls: List[str], delay: float = 3, *args, **kwargs) -> List[Dict]:
+    data = []
+
+    for url in urls:
+        try:
+            response = requests.get(url, headers={"User-Agent": generate_user_agent()})
+            if response.text == "Too many requests.":
+                raise TooManyRequests(f"URL: {url}, Response HTML: {response.text}")
+            kwargs["URL"] = url
+            cool = scrape_func(response.text, *args, **kwargs)
+            print(cool)
+            data.append(cool)
+            time.sleep(delay)
+        except Exception as exc:
+            raise exc
+
+    return data
+
+
+class Connector:
     """ Used to make asynchronous HTTP requests. """
 
-    def __init__(self, scrape_function, tasks, *args, cssselect=False):
-
+    def __init__(self, scrape_function: Callable, urls: List[str], *args, css_select: bool = False):
         self.scrape_function = scrape_function
-        self.tasks = tasks
+        self.urls = urls
         self.arguments = args
-        self.cssselect = cssselect
+        self.css_select = css_select
         self.data = []
 
-    async def __http_request__async(self, url, session):
+    async def __http_request__async(self, url: str, session: aiohttp.ClientSession, user_agent: str):
         """ Sends asynchronous http request to URL address and scrapes the webpage. """
 
         try:
-            async with session.get(url, headers={'User-Agent': generate_user_agent()}) as response:
+            async with session.get(url, headers={'User-Agent': user_agent}) as response:
                 page_html = await response.read()
 
-                if self.cssselect is True:
-                    return self.scrape_function(html.fromstring(page_html), url=url, *self.arguments)
-                else:
-                    return self.scrape_function(page_html, url=url, *self.arguments)
+                if self.css_select:
+                    return self.scrape_function(html.fromstring(page_html), *self.arguments)
+                return self.scrape_function(page_html, *self.arguments)
         except (asyncio.TimeoutError, requests.exceptions.Timeout):
             raise ConnectionTimeout(url)
 
@@ -63,12 +87,13 @@ class Connector(object):
         async_tasks = []
         conn = aiohttp.TCPConnector(limit_per_host=connection_settings['CONCURRENT_CONNECTIONS'])
         timeout = aiohttp.ClientTimeout(total=connection_settings['CONNECTION_TIMEOUT'])
+        user_agent = generate_user_agent()
 
         async with aiohttp.ClientSession(connector=conn,
                                          timeout=timeout,
-                                         headers={'User-Agent': generate_user_agent()}) as session:
-            for n in self.tasks:
-                async_tasks.append(self.__http_request__async(n, session))
+                                         headers={'User-Agent': user_agent}) as session:
+            for url in self.urls:
+                async_tasks.append(self.__http_request__async(url, session, user_agent))
 
             self.data = await asyncio.gather(*async_tasks)
 
