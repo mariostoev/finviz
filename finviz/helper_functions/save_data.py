@@ -1,7 +1,7 @@
 import csv
 import io
-import sqlite3
 import re
+import sqlite3
 
 
 def create_connection(sqlite_file):

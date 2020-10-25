@@ -16,6 +16,14 @@ class InvalidTableType(Exception):
             f'Invalid table type called: {arg}')
 
 
+class TooManyRequests(Exception):
+    """ Raise when HTTP request fails because too many requests were sent to FinViz at once. """
+
+    def __init__(self, arg):
+        super(TooManyRequests, self).__init__(
+            f'Too many HTTP requests at once: {arg}')
+
+
 class InvalidPortfolioID(Exception):
     """ Rasie when the given portfolio id is invalid. """
 

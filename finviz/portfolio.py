@@ -1,11 +1,17 @@
-from finviz.helper_functions.error_handling import InvalidPortfolioID, UnexistingPortfolioName, NoPortfolio, InvalidTicker
-from finviz.helper_functions.request_functions import http_request_get
-from finviz.helper_functions.scraper_functions import get_table, parse
-from finviz.helper_functions.display_functions import create_table_string
-import requests
 import csv
+
+import requests
+from lxml import html
 from user_agent import generate_user_agent
 
+from finviz.helper_functions.display_functions import create_table_string
+from finviz.helper_functions.error_handling import (
+    InvalidPortfolioID,
+    InvalidTicker,
+    UnexistingPortfolioName
+)
+from finviz.helper_functions.request_functions import http_request_get
+from finviz.helper_functions.scraper_functions import get_table
 
 LOGIN_URL = 'https://finviz.com/login_submit.ashx'
 PRICE_REQUEST_URL = 'https://finviz.com/request_quote.ashx'
@@ -46,10 +52,9 @@ class Portfolio(object):
             url=PORTFOLIO_URL, session=self._session, parse=False)
 
         # If the user has not created a portfolio it redirects the request to <url>?v=2)
+        self.created = True
         if self.portfolio_url == f'{PORTFOLIO_URL}?v=2':
             self.created = False
-        else:
-            self.created = True
 
         if self.created:
             if portfolio:
@@ -106,9 +111,9 @@ class Portfolio(object):
                     current_price_page, _ = http_request_get(
                         PRICE_REQUEST_URL, payload={'t': row[0]}, parse=True)
 
-                    # if price not available on finvz don't upload that ticker to portfolio
+                    # if price not available on finviz don't upload that ticker to portfolio
                     if current_price_page.text == 'NA':
-                        if drop_invalid_ticker == False:
+                        if not drop_invalid_ticker:
                             raise InvalidTicker(row[0])
                         del data['ticker' + row_number_string]
                         del data['transaction' + row_number_string]
@@ -132,10 +137,10 @@ class Portfolio(object):
                                         parse=False)
         else:  # else the user has passed a name
             # We remove the first element, since it's redundant
-            for portfolio in parse(self._page_content).cssselect('option')[1:]:
+            for portfolio in html.fromstring(self._page_content).cssselect('option')[1:]:
                 if portfolio.text == portfolio_name:
                     return http_request_get(url=f"{PORTFOLIO_URL}?pid={portfolio.get('value')}",
                                             session=self._session,
                                             parse=False)
-            # Raise UnexistingPortfolioName if none of the names match
+            # Raise Non-existing PortfolioName if none of the names match
             raise UnexistingPortfolioName(portfolio_name)
