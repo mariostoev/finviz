@@ -49,7 +49,7 @@ def sequential_data_scrape(scrape_func: Callable, urls: List[str], delay: float 
                 raise TooManyRequests(f"URL: {url}, Response HTML: {response.text}")
             kwargs["URL"] = url
             cool = scrape_func(response.text, *args, **kwargs)
-            print(cool)
+            # print(cool)
             data.append(cool)
             time.sleep(delay)
         except Exception as exc:
