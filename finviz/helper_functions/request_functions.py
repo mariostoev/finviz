@@ -30,7 +30,6 @@ def http_request_get(url, session=None, payload=None, parse=True):
             content = requests.get(url, params=payload, verify=False, headers={'User-Agent': generate_user_agent()})
 
         content.raise_for_status()  # Raise HTTPError for bad requests (4xx or 5xx)
-
         if parse:
             return html.fromstring(content.text), content.url
         else:
@@ -48,9 +47,7 @@ def sequential_data_scrape(scrape_func: Callable, urls: List[str], delay: float 
             if response.text == "Too many requests.":
                 raise TooManyRequests(f"URL: {url}, Response HTML: {response.text}")
             kwargs["URL"] = url
-            cool = scrape_func(response.text, *args, **kwargs)
-            # print(cool)
-            data.append(cool)
+            data.append(scrape_func(response.text, *args, **kwargs))
             time.sleep(delay)
         except Exception as exc:
             raise exc
