@@ -11,7 +11,10 @@ def create_connection(sqlite_file):
         conn = sqlite3.connect(sqlite_file)
         return conn
     except sqlite3.Error as error:
-        raise ("An error has occurred while connecting to the database: ", error.args[0])
+        raise (
+            "An error has occurred while connecting to the database: ",
+            error.args[0],
+        )
 
 
 def __write_csv_to_stream(stream, headers, data):
@@ -22,8 +25,8 @@ def __write_csv_to_stream(stream, headers, data):
     dict_writer.writerows(data)
 
 
-def export_to_csv(headers, data, filename=None, mode='w', newline=''):
-    """ Exports the generated table into a CSV file if a file is mentioned.
+def export_to_csv(headers, data, filename=None, mode="w", newline=""):
+    """Exports the generated table into a CSV file if a file is mentioned.
     Returns the CSV table as a string if no file is mentioned."""
 
     if filename:
@@ -45,7 +48,7 @@ def export_to_db(headers, data, filename):
 
     for field in headers:
 
-        field_cleaned = re.sub(r'[^\w\s]', '', field)
+        field_cleaned = re.sub(r"[^\w\s]", "", field)
         field_cleaned = field_cleaned.replace(" ", "")
         field_list += field_cleaned + " TEXT, "
 
@@ -57,7 +60,7 @@ def export_to_db(headers, data, filename):
         insert_fields = "("
         for field, value in row.items():
 
-            insert_fields += "\"" + value + "\", "
+            insert_fields += '"' + value + '", '
 
         inserts += insert_fields[:-2] + "), "
 
