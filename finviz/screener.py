@@ -430,7 +430,6 @@ class Screener(object):
 
         self._rows = self.__check_rows()
         self.headers = self.__get_table_headers()
-        page_urls = scrape.get_page_urls(self._page_content, self._rows, self._url)
         pages_data = sequential_data_scrape(
             scrape.get_table,
             scrape.get_page_urls(self._page_content, self._rows, self._url),
