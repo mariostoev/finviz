@@ -7,7 +7,7 @@ from user_agent import generate_user_agent
 from finviz.helper_functions.display_functions import create_table_string
 from finviz.helper_functions.error_handling import (InvalidPortfolioID,
                                                     InvalidTicker,
-                                                    UnexistingPortfolioName)
+                                                    NonexistentPortfolioName)
 from finviz.helper_functions.request_functions import http_request_get
 from finviz.helper_functions.scraper_functions import get_table
 
@@ -157,4 +157,4 @@ class Portfolio(object):
                         parse=False,
                     )
             # Raise Non-existing PortfolioName if none of the names match
-            raise UnexistingPortfolioName(portfolio_name)
+            raise NonexistentPortfolioName(portfolio_name)

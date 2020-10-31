@@ -23,7 +23,7 @@ class TooManyRequests(Exception):
 
 
 class InvalidPortfolioID(Exception):
-    """ Rasie when the given portfolio id is invalid. """
+    """ Raise when the given portfolio id is invalid. """
 
     def __int__(self, portfolio_id):
         super(InvalidPortfolioID, self).__init__(
@@ -31,12 +31,12 @@ class InvalidPortfolioID(Exception):
         )
 
 
-class UnexistingPortfolioName(Exception):
-    """ Raise when the given portfolio name is unexisting. """
+class NonexistentPortfolioName(Exception):
+    """ Raise when the given portfolio name is nonexistent. """
 
     def __init__(self, name):
-        super(UnexistingPortfolioName, self).__init__(
-            f"Unexisting portfolio with name: {name}"
+        super(NonexistentPortfolioName, self).__init__(
+            f"Nonexistent portfolio with name: {name}"
         )
 
 
@@ -51,7 +51,7 @@ class NoPortfolio(Exception):
 
 
 class InvalidTicker(Exception):
-    """ Raise when the given ticker is nonexistant or unavailable on FinViz.  """
+    """ Raise when the given ticker is nonexistent or unavailable on FinViz.  """
 
     def __init__(self, ticker):
         super(InvalidTicker, self).__init__(
