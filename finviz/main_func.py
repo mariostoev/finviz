@@ -140,7 +140,7 @@ def get_analyst_price_targets(ticker, last_ratings=5):
             if count == last_ratings:
                 break
             # defalut values for len(row) == 4 , that is there is NO price information
-            price_from, price_to = 0, 0
+            price_from, price_to = "Unknown", "Unknown"
             if len(row) == 5:
 
                 strings = row[4].split('→')
@@ -161,15 +161,38 @@ def get_analyst_price_targets(ticker, last_ratings=5):
             elements.append(price_from)
             elements.append(price_to)
 
-            data = {
-                'date': elements[0],
-                'category':elements[1], 
-                'analyst': elements[2],
-                'rating':elements[3],
-                'price_from':float(price_from),
-                'price_to':float(price_to)
-            }
-            
+            if price_from == "Unknown" and price_to == "Unknown":
+                data = {
+                    'date': elements[0],
+                    'category':elements[1],
+                    'analyst': elements[2],
+                    'rating':elements[3]
+                }
+            elif price_to == "Unknown":
+                data = {
+                    'date': elements[0],
+                    'category': elements[1],
+                    'analyst': elements[2],
+                    'rating': elements[3],
+                    'price_from': price_from
+                }
+            elif price_from == "Unknown":
+                data = {
+                    'date': elements[0],
+                    'category': elements[1],
+                    'analyst': elements[2],
+                    'rating': elements[3],
+                    'price_to': price_to
+                }
+            else:
+                data = {
+                    'date': elements[0],
+                    'category':elements[1],
+                    'analyst': elements[2],
+                    'rating':elements[3],
+                    'price_from':price_from,
+                    'price_to':price_to
+                }
             analyst_price_targets.append(data)
             count += 1
     except Exception as e:
