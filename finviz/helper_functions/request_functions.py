@@ -128,6 +128,7 @@ class Connector:
     def run_connector(self):
         """ Starts the asynchronous loop and returns the scraped data. """
 
+        asyncio.set_event_loop(asyncio.SelectorEventLoop())
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.__async_scraper())
 
