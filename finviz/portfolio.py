@@ -91,7 +91,7 @@ class Portfolio(object):
         ENGH:CA,1,,1,
 
         (!) For transaction - 1 = BUY, 2 = SELL
-        (!) Note that if the price is ommited the function will take today's ticker price
+        (!) Note that if the price is omitted the function will take today's ticker price
         """
 
         data = {

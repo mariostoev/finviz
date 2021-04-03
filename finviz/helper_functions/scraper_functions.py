@@ -19,7 +19,7 @@ def get_table(page_html: requests.Response, headers, rows=None, **kwargs):
     # Skip the first element ([1:]), since it's the headers (we already have it as a constant)
     all_rows = [
         column.xpath("td//text()")
-        for column in page_parsed.cssselect('tr[valign="top"]')[1: rows + 1]
+        for column in page_parsed.cssselect('tr[valign="top"]')[1 : rows + 1]
     ]
 
     # If rows is different from -2, this function is called from Screener
@@ -80,7 +80,7 @@ def download_chart_image(page_content: requests.Response, **kwargs):
 
 
 def get_analyst_price_targets_for_export(
-        ticker=None, page_content=None, last_ratings=5
+    ticker=None, page_content=None, last_ratings=5
 ):
     analyst_price_targets = []
 
