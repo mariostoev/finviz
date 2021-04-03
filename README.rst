@@ -19,8 +19,6 @@ Downloading & Installation
 -----
 
     $ pip install -U git+https://github.com/mariostoev/finviz
-    OR
-    $ pip install finviz
 
 
 What is Finviz?
