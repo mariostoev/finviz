@@ -88,9 +88,15 @@ def get_all_news():
     """
 
     page_parsed, _ = http_request_get(url=NEWS_URL, parse=True)
-    all_dates = [row.text_content() for row in page_parsed.cssselect('td[class="nn-date"]')]
-    all_headlines = [row.text_content() for row in page_parsed.cssselect('a[class="nn-tab-link"]')]
-    all_links = [row.get('href') for row in page_parsed.cssselect('a[class="nn-tab-link"]')]
+    all_dates = [
+        row.text_content() for row in page_parsed.cssselect('td[class="nn-date"]')
+    ]
+    all_headlines = [
+        row.text_content() for row in page_parsed.cssselect('a[class="nn-tab-link"]')
+    ]
+    all_links = [
+        row.get("href") for row in page_parsed.cssselect('a[class="nn-tab-link"]')
+    ]
 
     return list(zip(all_dates, all_headlines, all_links))
 
@@ -143,14 +149,14 @@ def get_analyst_price_targets(ticker, last_ratings=5):
         for row in ratings_list:
             if count == last_ratings:
                 break
-            # defalut values for len(row) == 4 , that is there is NO price information
+            # default values for len(row) == 4 , that is there is NO price information
             price_from, price_to = 0, 0
             if len(row) == 5:
 
                 strings = row[4].split("→")
                 # print(strings)
                 if len(strings) == 1:
-                    # if only ONE price is avalable then it is 'price_to' value
+                    # if only ONE price is available then it is 'price_to' value
                     price_to = strings[0].strip(" ").strip("$")
                 else:
                     # both '_from' & '_to' prices available

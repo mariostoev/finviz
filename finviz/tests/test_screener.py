@@ -23,7 +23,7 @@ class TestScreener:
         assert len(stock_list) == count
 
     def test_screener_stability(self):
-        """ Requested in SD-77: https://github.com/mariostoev/finviz/issues/77 """
+        """ Requested in #77: https://github.com/mariostoev/finviz/issues/77 """
         filters = [
             "sh_avgvol_o100",  # average daily volume > 100k shares
             "sh_curvol_o100",  # current daily volume > 100k shares

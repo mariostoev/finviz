@@ -5,11 +5,13 @@ from urllib.parse import parse_qs as urlparse_qs
 from urllib.parse import urlencode, urlparse
 
 from bs4 import BeautifulSoup
+from user_agent import generate_user_agent
 
 import finviz.helper_functions.scraper_functions as scrape
 from finviz.helper_functions.display_functions import create_table_string
 from finviz.helper_functions.error_handling import InvalidTableType, NoResults
-from finviz.helper_functions.request_functions import (http_request_get,
+from finviz.helper_functions.request_functions import (Connector,
+                                                       http_request_get,
                                                        sequential_data_scrape)
 from finviz.helper_functions.save_data import export_to_csv, export_to_db
 
@@ -66,7 +68,8 @@ class Screener(object):
         signal="",
         table=None,
         custom=None,
-        delay=0.5,
+        user_agent=generate_user_agent(),
+        request_method="sequential",
     ):
         """
         Initializes all variables to its values
@@ -118,7 +121,8 @@ class Screener(object):
         self._rows = rows
         self._order = order
         self._signal = signal
-        self._delay = delay
+        self._user_agent = user_agent
+        self._request_method = request_method
 
         self.analysis = []
         self.data = self.__search_screener()
@@ -362,7 +366,7 @@ class Screener(object):
                 f"https://finviz.com/chart.ashx?{encoded_payload}&t={row.get('Ticker')}"
                 for row in self.data
             ],
-            self._delay,
+            self._user_agent,
         )
 
     def get_ticker_details(self):
@@ -376,7 +380,7 @@ class Screener(object):
                 f"https://finviz.com/quote.ashx?&t={row.get('Ticker')}"
                 for row in self.data
             ],
-            self._delay,
+            self._user_agent,
         )
 
         for entry in ticker_data:
@@ -426,17 +430,30 @@ class Screener(object):
                 "s": self._signal,
                 "c": ",".join(self._custom),
             },
+            user_agent=self._user_agent,
         )
 
         self._rows = self.__check_rows()
         self.headers = self.__get_table_headers()
-        pages_data = sequential_data_scrape(
-            scrape.get_table,
-            scrape.get_page_urls(self._page_content, self._rows, self._url),
-            self._delay,
-            self.headers,
-            self._rows,
-        )
+
+        if self._request_method == "async":
+            async_connector = Connector(
+                scrape.get_table,
+                scrape.get_page_urls(self._page_content, self._rows, self._url),
+                self._user_agent,
+                self.headers,
+                self._rows,
+                css_select=True,
+            )
+            pages_data = async_connector.run_connector()
+        else:
+            pages_data = sequential_data_scrape(
+                scrape.get_table,
+                scrape.get_page_urls(self._page_content, self._rows, self._url),
+                self._user_agent,
+                self.headers,
+                self._rows,
+            )
 
         data = []
         for page in pages_data:
