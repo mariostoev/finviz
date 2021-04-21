@@ -8,7 +8,7 @@ from lxml import etree, html
 
 def get_table(page_html: requests.Response, headers, rows=None, **kwargs):
     """ Private function used to return table data inside a list of dictionaries. """
-    page_parsed = html.fromstring(page_html.text)
+    page_parsed = html.fromstring(page_html)
     # When we call this method from Portfolio we don't fill the rows argument.
     # Conversely, we always fill the rows argument when we call this method from Screener.
     # Also, in the portfolio page, we don't need the last row - it's redundant.
