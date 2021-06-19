@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 from finviz.helper_functions.request_functions import http_request_get
 from finviz.helper_functions.scraper_functions import get_table
@@ -74,11 +74,28 @@ def get_news(ticker):
 
     get_page(ticker)
     page_parsed = STOCK_PAGE[ticker]
-    all_news = page_parsed.cssselect('a[class="tab-link-news"]')
-    headlines = [row.xpath("text()")[0] for row in all_news]
-    urls = [row.get("href") for row in all_news]
+    rows = page_parsed.cssselect('table[id="news-table"]')[0].xpath('./tr[not(@id)]')
 
-    return list(zip(headlines, urls))
+    results = []
+    date = None
+    for row in rows:
+        raw_timestamp = row.xpath("./td")[0].xpath('text()')[0][0:-2]
+
+        if len(raw_timestamp) > 8:
+            parsed_timestamp = datetime.strptime(raw_timestamp, "%b-%d-%y %I:%M%p")
+            date = parsed_timestamp.date()
+        else:
+            parsed_timestamp = datetime.strptime(raw_timestamp, "%I:%M%p").replace(
+                year=date.year, month=date.month, day=date.day)
+
+        results.append((
+            parsed_timestamp.strftime("%Y-%m-%d %H:%M"),
+            row.xpath("./td")[1].cssselect('a[class="tab-link-news"]')[0].xpath("text()")[0],
+            row.xpath("./td")[1].cssselect('a[class="tab-link-news"]')[0].get("href"),
+            row.xpath("./td")[1].cssselect('div[class="news-link-right"] span')[0].xpath("text()")[0][1:]
+        ))
+
+    return results
 
 
 def get_all_news():
@@ -131,60 +148,30 @@ def get_analyst_price_targets(ticker, last_ratings=5):
         get_page(ticker)
         page_parsed = STOCK_PAGE[ticker]
         table = page_parsed.cssselect('table[class="fullview-ratings-outer"]')[0]
-        ratings_list = [row.xpath("td//text()") for row in table]
-        ratings_list = [
-            [val for val in row if val != "\n"] for row in ratings_list
-        ]  # remove new line entries
 
-        headers = [
-            "date",
-            "category",
-            "analyst",
-            "rating",
-            "price_from",
-            "price_to",
-        ]  # header names
-        count = 0
-
-        for row in ratings_list:
-            if count == last_ratings:
-                break
-            # default values for len(row) == 4 , that is there is NO price information
-            price_from, price_to = 0, 0
-            if len(row) == 5:
-
-                strings = row[4].split("→")
-                # print(strings)
-                if len(strings) == 1:
-                    # if only ONE price is available then it is 'price_to' value
-                    price_to = strings[0].strip(" ").strip("$")
-                else:
-                    # both '_from' & '_to' prices available
-                    price_from = strings[0].strip(" ").strip("$")
-                    price_to = strings[1].strip(" ").strip("$")
-            # only take first 4 elements, discard last element if exists
-            elements = row[:4]
-            elements.append(
-                datetime.datetime.strptime(row[0], "%b-%d-%y").strftime("%Y-%m-%d")
-            )  # convert date format
-            elements.extend(row[1:3])
-            elements.append(row[3].replace("→", "->"))
-            elements.append(price_from)
-            elements.append(price_to)
+        for row in table:
+            rating = row.xpath("td//text()")
+            rating = [val.replace("→", "->").replace("$", "") for val in rating if val != '\n']
+            rating[0] = datetime.strptime(rating[0], "%b-%d-%y").strftime("%Y-%m-%d")
 
             data = {
-                "date": elements[0],
-                "category": elements[1],
-                "analyst": elements[2],
-                "rating": elements[3],
-                "price_from": float(price_from),
-                "price_to": float(price_to),
+                "date":     rating[0],
+                "category": rating[1],
+                "analyst":  rating[2],
+                "rating":   rating[3],
             }
+            if len(rating) == 5:
+                if "->" in rating[4]:
+                    rating.extend(rating[4].replace(" ", "").split("->"))
+                    del rating[4]
+                    data["target_from"] = float(rating[4])
+                    data["target_to"] = float(rating[5])
+                else:
+                    data["target"] = float(rating[4])
 
             analyst_price_targets.append(data)
-            count += 1
     except Exception as e:
         # print("-> Exception: %s parsing analysts' ratings for ticker %s" % (str(e), ticker))
         pass
 
-    return analyst_price_targets
+    return analyst_price_targets[:last_ratings]
