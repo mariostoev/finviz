@@ -1,5 +1,6 @@
 import datetime
 import os
+import time
 
 import requests
 from lxml import etree, html
@@ -7,7 +8,10 @@ from lxml import etree, html
 
 def get_table(page_html: requests.Response, headers, rows=None, **kwargs):
     """ Private function used to return table data inside a list of dictionaries. """
-    page_parsed = html.fromstring(page_html.text)
+    if isinstance(page_html, str):
+        page_parsed = html.fromstring(page_html)
+    else:
+        page_parsed = html.fromstring(page_html.text)
     # When we call this method from Portfolio we don't fill the rows argument.
     # Conversely, we always fill the rows argument when we call this method from Screener.
     # Also, in the portfolio page, we don't need the last row - it's redundant.
@@ -69,8 +73,7 @@ def get_page_urls(page_content, rows, url):
 
 def download_chart_image(page_content: requests.Response, **kwargs):
     """ Downloads a .png image of a chart into the "charts" folder. """
-
-    file_name = kwargs["URL"].split("t=")[1] + ".png"
+    file_name = f"{kwargs['URL'].split('t=')[1]}_{int(time.time())}.png"
 
     if not os.path.exists("charts"):
         os.mkdir("charts")
