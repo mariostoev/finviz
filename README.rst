@@ -1,5 +1,5 @@
 finviz-api
-########
+##########
 *Unofficial Python API for FinViz*
 
 .. image:: https://badge.fury.io/py/finviz.svg
@@ -16,13 +16,13 @@ finviz-api
     
 
 Downloading & Installation
------
+---------------------------
 
     $ pip install -U git+https://github.com/mariostoev/finviz
 
 
 What is Finviz?
-=====
+================
 FinViz_ aims to make market information accessible and provides a lot of data in visual snapshots, allowing traders and investors to quickly find the stock, future or forex pair they are looking for. The site provides advanced screeners, market maps, analysis, comparative tools, and charts.
 
 .. _FinViz: https://finviz.com/?a=128493348
@@ -32,7 +32,7 @@ FinViz_ aims to make market information accessible and provides a lot of data in
 Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and 20 minutes for NYSE and AMEX. This API should **NOT** be used for live trading, it's main purpose is financial analysis, research, and data scraping.
 
 Using Screener
-=====
+===============
 
 Before using the Screener class, you have to manually go to the website's screener and enter your desired settings. The URL will automatically change every time you add a new setting. After you're done the URL will look something like this:
 
@@ -68,7 +68,7 @@ To make matters easier inside the code you won't refer to tables by their number
 .. image:: https://i.imgur.com/cb7UdxB.png
 
 Using Portfolio
-=====
+================
 .. code:: python
 
     from finviz.portfolio import Portfolio
@@ -112,7 +112,7 @@ Note that, if any *optional* fields are left empty, the API will assign them tod
     portfolio.create_portfolio('<portfolio-name>', '<path-to-csv-file>')
 
 Individual stocks
-=====
+==================
 
 .. code:: pycon
 
@@ -128,7 +128,7 @@ Individual stocks
     [{'date': '2019-10-24', 'category': 'Reiterated', 'analyst': 'UBS', 'rating': 'Buy', 'price_from': 235, 'price_to': 275}, ...
 
 Downloading charts
-=====
+===================
 
 .. code:: python
     
@@ -149,12 +149,12 @@ Downloading charts
     # ta='0' > ignore technical analysis
     
 Documentation
-=====
+==============
 
 You can read the rest of the documentation inside the docstrings.
 
 Contributing 
-=====
+=============
 You can contribute to the project by reporting bugs, suggesting enhancements, or directly by extending and writing features (see the ongoing projects_).
 
 .. _projects: https://github.com/mariostoev/finviz/projects/1
@@ -165,5 +165,5 @@ You can contribute to the project by reporting bugs, suggesting enhancements, or
         :target: https://www.paypal.me/finvizapi
 
 Disclaimer
------
+-----------
 *Using the library to acquire data from FinViz is against their Terms of Service and robots.txt. Use it responsibly and at your own risk. This library is built purely for educational purposes.*
