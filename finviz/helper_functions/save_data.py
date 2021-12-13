@@ -47,12 +47,15 @@ def export_to_db(headers, data, filename):
     c = conn.cursor()
 
     for field in headers:
-
         field_cleaned = re.sub(r"[^\w\s]", "", field)
         field_cleaned = field_cleaned.replace(" ", "")
+        field_cleaned = field_cleaned.replace("50DHigh", "High50D")
+        field_cleaned = field_cleaned.replace("50DLow", "Low50D")
+        field_cleaned = field_cleaned.replace("52WHigh", "High52W")
+        field_cleaned = field_cleaned.replace("52WLow", "Low52W")
         field_list += field_cleaned + " TEXT, "
 
-    c.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({field_list[:-2]})")
+    c.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({field_list[:-2]});")
 
     inserts = ""
     for row in data:
@@ -67,7 +70,7 @@ def export_to_db(headers, data, filename):
     insert_lines = inserts[:-2]
 
     try:
-        c.execute(f"INSERT INTO {table_name} VALUES {insert_lines}")
+        c.execute(f"INSERT INTO {table_name} VALUES {insert_lines};")
     except sqlite3.Error as error:
         print("An error has occurred", error.args[0])
 

@@ -148,6 +148,11 @@ Downloading charts
     # ta='1' > display technical analysis
     # ta='0' > ignore technical analysis
     
+Environment Variables
+======================
+
+Set ``DISABLE_TQDM=1`` in your environment to disable the progress bar.
+
 Documentation
 ==============
 

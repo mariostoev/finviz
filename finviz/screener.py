@@ -27,7 +27,7 @@ TABLE_TYPES = {
 
 
 class Screener(object):
-    """ Used to download data from http://www.finviz.com/screener.ashx. """
+    """ Used to download data from https://www.finviz.com/screener.ashx. """
 
     @classmethod
     def init_from_url(cls, url, rows=None):
@@ -103,7 +103,7 @@ class Screener(object):
             self._filters = filters
 
         if table is None:
-            self._table = "Overview"
+            self._table = "111"
         else:
             self._table = self.__check_table(table)
 

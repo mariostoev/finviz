@@ -57,7 +57,12 @@ def get_insider(ticker):
 
     get_page(ticker)
     page_parsed = STOCK_PAGE[ticker]
-    table = page_parsed.cssselect('table[class="body-table"]')[0]
+    outer_table = page_parsed.cssselect('table[class="body-table"]')
+
+    if len(outer_table) == 0:
+        return []
+
+    table = outer_table[0]
     headers = table[0].xpath("td//text()")
     data = [dict(zip(headers, row.xpath("td//text()"))) for row in table[1:]]
 
@@ -74,7 +79,12 @@ def get_news(ticker):
 
     get_page(ticker)
     page_parsed = STOCK_PAGE[ticker]
-    rows = page_parsed.cssselect('table[id="news-table"]')[0].xpath('./tr[not(@id)]')
+    news_table = page_parsed.cssselect('table[id="news-table"]')
+
+    if len(news_table) == 0:
+        return []
+
+    rows = news_table[0].xpath('./tr[not(@id)]')
 
     results = []
     date = None
