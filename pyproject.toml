@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "finviz"
-version = "1.4.2"
+version = "1.4.3"
 description = "Unofficial API for finviz.com"
 authors = ["Mario Stoev <bg.mstoev@gmail.com>", "James Bury <jabury@sympatico.ca>"]
 license = "MIT"
