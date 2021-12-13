@@ -5,8 +5,8 @@ finviz-api
 .. image:: https://badge.fury.io/py/finviz.svg
     :target: https://badge.fury.io/py/finviz
     
-.. image:: https://img.shields.io/badge/python-3.6-blue.svg
-    :target: https://www.python.org/downloads/release/python-360/
+.. image:: https://img.shields.io/badge/python-3.9-blue.svg
+    :target: https://www.python.org/downloads/release/python-390/
     
 .. image:: https://pepy.tech/badge/finviz
     :target: https://pepy.tech/project/finviz
