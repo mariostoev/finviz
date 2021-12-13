@@ -11,9 +11,6 @@ finviz-api
 .. image:: https://pepy.tech/badge/finviz
     :target: https://pepy.tech/project/finviz
     
-.. image:: http://hits.dwyl.io/mariostoev/finviz.svg
-    :target: http://hits.dwyl.io/mariostoev/finviz
-    
 
 Downloading & Installation
 ---------------------------
