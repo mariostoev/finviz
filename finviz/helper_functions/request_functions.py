@@ -1,4 +1,5 @@
 import asyncio
+import os
 from typing import Callable, Dict, List
 
 import aiohttp
@@ -62,7 +63,7 @@ def sequential_data_scrape(
 ) -> List[Dict]:
     data = []
 
-    for url in tqdm(urls):
+    for url in tqdm(urls, disable="DISABLE_TQDM" in os.environ):
         try:
             response = finviz_request(url, user_agent)
             kwargs["URL"] = url
