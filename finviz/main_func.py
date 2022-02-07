@@ -35,6 +35,10 @@ def get_stock(ticker):
     fields = [f.text_content() for f in title.cssselect('a[class="tab-link"]')]
     data = dict(zip(keys, fields))
 
+    # Add the website link for a ticker if it is present on the Finviz page.
+    company_link = title.cssselect('a[class="tab-link"]')[0].attrib["href"]
+    data["Website"] = company_link if company_link.startswith("http") else None
+
     all_rows = [
         row.xpath("td//text()")
         for row in page_parsed.cssselect('tr[class="table-dark-row"]')
@@ -84,26 +88,35 @@ def get_news(ticker):
     if len(news_table) == 0:
         return []
 
-    rows = news_table[0].xpath('./tr[not(@id)]')
+    rows = news_table[0].xpath("./tr[not(@id)]")
 
     results = []
     date = None
     for row in rows:
-        raw_timestamp = row.xpath("./td")[0].xpath('text()')[0][0:-2]
+        raw_timestamp = row.xpath("./td")[0].xpath("text()")[0][0:-2]
 
         if len(raw_timestamp) > 8:
             parsed_timestamp = datetime.strptime(raw_timestamp, "%b-%d-%y %I:%M%p")
             date = parsed_timestamp.date()
         else:
             parsed_timestamp = datetime.strptime(raw_timestamp, "%I:%M%p").replace(
-                year=date.year, month=date.month, day=date.day)
+                year=date.year, month=date.month, day=date.day
+            )
 
-        results.append((
-            parsed_timestamp.strftime("%Y-%m-%d %H:%M"),
-            row.xpath("./td")[1].cssselect('a[class="tab-link-news"]')[0].xpath("text()")[0],
-            row.xpath("./td")[1].cssselect('a[class="tab-link-news"]')[0].get("href"),
-            row.xpath("./td")[1].cssselect('div[class="news-link-right"] span')[0].xpath("text()")[0][1:]
-        ))
+        results.append(
+            (
+                parsed_timestamp.strftime("%Y-%m-%d %H:%M"),
+                row.xpath("./td")[1]
+                .cssselect('a[class="tab-link-news"]')[0]
+                .xpath("text()")[0],
+                row.xpath("./td")[1]
+                .cssselect('a[class="tab-link-news"]')[0]
+                .get("href"),
+                row.xpath("./td")[1]
+                .cssselect('div[class="news-link-right"] span')[0]
+                .xpath("text()")[0][1:],
+            )
+        )
 
     return results
 
@@ -161,14 +174,16 @@ def get_analyst_price_targets(ticker, last_ratings=5):
 
         for row in table:
             rating = row.xpath("td//text()")
-            rating = [val.replace("→", "->").replace("$", "") for val in rating if val != '\n']
+            rating = [
+                val.replace("→", "->").replace("$", "") for val in rating if val != "\n"
+            ]
             rating[0] = datetime.strptime(rating[0], "%b-%d-%y").strftime("%Y-%m-%d")
 
             data = {
-                "date":     rating[0],
+                "date": rating[0],
                 "category": rating[1],
-                "analyst":  rating[2],
-                "rating":   rating[3],
+                "analyst": rating[2],
+                "rating": rating[3],
             }
             if len(rating) == 5:
                 if "->" in rating[4]:
