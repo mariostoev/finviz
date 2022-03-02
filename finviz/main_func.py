@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from lxml import etree
+
 from finviz.helper_functions.request_functions import http_request_get
 from finviz.helper_functions.scraper_functions import get_table
 
@@ -42,6 +44,15 @@ def get_stock(ticker):
 
     for row in all_rows:
         for column in range(0, 11, 2):
+            if row[column] == "EPS next Y" and "EPS next Y" in data.keys():
+                data["EPS growth next Y"] = row[column + 1]
+                continue
+            elif row[column] == "Volatility":
+                vols = row[column + 1].split()
+                data["Volatility (Week)"] = vols[0]
+                data["Volatility (Month)"] = vols[1]
+                continue
+
             data[row[column]] = row[column + 1]
 
     return data
@@ -64,7 +75,11 @@ def get_insider(ticker):
 
     table = outer_table[0]
     headers = table[0].xpath("td//text()")
-    data = [dict(zip(headers, row.xpath("td//text()"))) for row in table[1:]]
+
+    data = [dict(zip(
+        headers,
+        [etree.tostring(elem, method="text", encoding="unicode") for elem in row]
+    )) for row in table[1:]]
 
     return data
 

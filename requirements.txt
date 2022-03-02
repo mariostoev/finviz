@@ -1,4 +1,4 @@
-finviz~=1.4.2
+finviz~=1.4.4
 beautifulsoup4~=4.9.3
 requests~=2.25.1
 aiohttp~=3.7.4
