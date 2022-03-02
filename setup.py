@@ -9,7 +9,7 @@ setup(
     author="Mario Stoev, James Bury",
     author_email="bg.mstoev@gmail.com, jabury@sympatico.ca",
     url="https://github.com/mariostoev/finviz",
-    download_url="https://github.com/mariostoev/finviz/archive/1.4.3.tar.gz",
+    download_url="https://github.com/mariostoev/finviz/archive/1.4.4.tar.gz",
     keywords=["finviz", "api", "screener", "finviz api", "charts", "scraper"],
     install_requires=[
         "lxml",
