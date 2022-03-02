@@ -37,6 +37,9 @@ def get_stock(ticker):
     fields = [f.text_content() for f in title.cssselect('a[class="tab-link"]')]
     data = dict(zip(keys, fields))
 
+    company_link = title.cssselect('a[class="tab-link"]')[0].attrib["href"]
+    data["Website"] = company_link if company_link.startswith("http") else None
+
     all_rows = [
         row.xpath("td//text()")
         for row in page_parsed.cssselect('tr[class="table-dark-row"]')
@@ -99,12 +102,12 @@ def get_news(ticker):
     if len(news_table) == 0:
         return []
 
-    rows = news_table[0].xpath('./tr[not(@id)]')
+    rows = news_table[0].xpath("./tr[not(@id)]")
 
     results = []
     date = None
     for row in rows:
-        raw_timestamp = row.xpath("./td")[0].xpath('text()')[0][0:-2]
+        raw_timestamp = row.xpath("./td")[0].xpath("text()")[0][0:-2]
 
         if len(raw_timestamp) > 8:
             parsed_timestamp = datetime.strptime(raw_timestamp, "%b-%d-%y %I:%M%p")
@@ -176,14 +179,14 @@ def get_analyst_price_targets(ticker, last_ratings=5):
 
         for row in table:
             rating = row.xpath("td//text()")
-            rating = [val.replace("→", "->").replace("$", "") for val in rating if val != '\n']
+            rating = [val.replace("→", "->").replace("$", "") for val in rating if val != "\n"]
             rating[0] = datetime.strptime(rating[0], "%b-%d-%y").strftime("%Y-%m-%d")
 
             data = {
-                "date":     rating[0],
+                "date": rating[0],
                 "category": rating[1],
-                "analyst":  rating[2],
-                "rating":   rating[3],
+                "analyst": rating[2],
+                "rating": rating[3],
             }
             if len(rating) == 5:
                 if "->" in rating[4]:
@@ -196,7 +199,6 @@ def get_analyst_price_targets(ticker, last_ratings=5):
 
             analyst_price_targets.append(data)
     except Exception as e:
-        # print("-> Exception: %s parsing analysts' ratings for ticker %s" % (str(e), ticker))
         pass
 
     return analyst_price_targets[:last_ratings]
