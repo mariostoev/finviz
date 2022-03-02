@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from lxml import etree
+
 from finviz.helper_functions.request_functions import http_request_get
 from finviz.helper_functions.scraper_functions import get_table
 
@@ -35,6 +37,9 @@ def get_stock(ticker):
     fields = [f.text_content() for f in title.cssselect('a[class="tab-link"]')]
     data = dict(zip(keys, fields))
 
+    company_link = title.cssselect('a[class="tab-link"]')[0].attrib["href"]
+    data["Website"] = company_link if company_link.startswith("http") else None
+
     all_rows = [
         row.xpath("td//text()")
         for row in page_parsed.cssselect('tr[class="table-dark-row"]')
@@ -42,6 +47,15 @@ def get_stock(ticker):
 
     for row in all_rows:
         for column in range(0, 11, 2):
+            if row[column] == "EPS next Y" and "EPS next Y" in data.keys():
+                data["EPS growth next Y"] = row[column + 1]
+                continue
+            elif row[column] == "Volatility":
+                vols = row[column + 1].split()
+                data["Volatility (Week)"] = vols[0]
+                data["Volatility (Month)"] = vols[1]
+                continue
+
             data[row[column]] = row[column + 1]
 
     return data
@@ -64,7 +78,11 @@ def get_insider(ticker):
 
     table = outer_table[0]
     headers = table[0].xpath("td//text()")
-    data = [dict(zip(headers, row.xpath("td//text()"))) for row in table[1:]]
+
+    data = [dict(zip(
+        headers,
+        [etree.tostring(elem, method="text", encoding="unicode") for elem in row]
+    )) for row in table[1:]]
 
     return data
 
@@ -84,12 +102,12 @@ def get_news(ticker):
     if len(news_table) == 0:
         return []
 
-    rows = news_table[0].xpath('./tr[not(@id)]')
+    rows = news_table[0].xpath("./tr[not(@id)]")
 
     results = []
     date = None
     for row in rows:
-        raw_timestamp = row.xpath("./td")[0].xpath('text()')[0][0:-2]
+        raw_timestamp = row.xpath("./td")[0].xpath("text()")[0][0:-2]
 
         if len(raw_timestamp) > 8:
             parsed_timestamp = datetime.strptime(raw_timestamp, "%b-%d-%y %I:%M%p")
@@ -161,14 +179,14 @@ def get_analyst_price_targets(ticker, last_ratings=5):
 
         for row in table:
             rating = row.xpath("td//text()")
-            rating = [val.replace("→", "->").replace("$", "") for val in rating if val != '\n']
+            rating = [val.replace("→", "->").replace("$", "") for val in rating if val != "\n"]
             rating[0] = datetime.strptime(rating[0], "%b-%d-%y").strftime("%Y-%m-%d")
 
             data = {
-                "date":     rating[0],
+                "date": rating[0],
                 "category": rating[1],
-                "analyst":  rating[2],
-                "rating":   rating[3],
+                "analyst": rating[2],
+                "rating": rating[3],
             }
             if len(rating) == 5:
                 if "->" in rating[4]:
@@ -181,7 +199,6 @@ def get_analyst_price_targets(ticker, last_ratings=5):
 
             analyst_price_targets.append(data)
     except Exception as e:
-        # print("-> Exception: %s parsing analysts' ratings for ticker %s" % (str(e), ticker))
         pass
 
     return analyst_price_targets[:last_ratings]
