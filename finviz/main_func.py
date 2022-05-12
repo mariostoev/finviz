@@ -8,16 +8,14 @@ from finviz.helper_functions.scraper_functions import get_table
 STOCK_URL = "https://finviz.com/quote.ashx"
 NEWS_URL = "https://finviz.com/news.ashx"
 CRYPTO_URL = "https://finviz.com/crypto_performance.ashx"
-STOCK_PAGE = {}
 
 
 def get_page(ticker):
-    global STOCK_PAGE
+    STOCK_PAGE, _ = http_request_get(
+        url=STOCK_URL, payload={"t": ticker}, parse=True
+    )
 
-    if ticker not in STOCK_PAGE:
-        STOCK_PAGE[ticker], _ = http_request_get(
-            url=STOCK_URL, payload={"t": ticker}, parse=True
-        )
+    return STOCK_PAGE
 
 
 def get_stock(ticker):
@@ -29,8 +27,7 @@ def get_stock(ticker):
     :return dict
     """
 
-    get_page(ticker)
-    page_parsed = STOCK_PAGE[ticker]
+    page_parsed = get_page(ticker)
 
     title = page_parsed.cssselect('table[class="fullview-title"]')[0]
     keys = ["Company", "Sector", "Industry", "Country"]
@@ -69,8 +66,7 @@ def get_insider(ticker):
     :return: list
     """
 
-    get_page(ticker)
-    page_parsed = STOCK_PAGE[ticker]
+    page_parsed = get_page(ticker)
     outer_table = page_parsed.cssselect('table[class="body-table"]')
 
     if len(outer_table) == 0:
@@ -95,8 +91,7 @@ def get_news(ticker):
     :return: list
     """
 
-    get_page(ticker)
-    page_parsed = STOCK_PAGE[ticker]
+    page_parsed = get_page(ticker)
     news_table = page_parsed.cssselect('table[id="news-table"]')
 
     if len(news_table) == 0:
@@ -173,8 +168,7 @@ def get_analyst_price_targets(ticker, last_ratings=5):
     analyst_price_targets = []
 
     try:
-        get_page(ticker)
-        page_parsed = STOCK_PAGE[ticker]
+        page_parsed = get_page(ticker)
         table = page_parsed.cssselect('table[class="fullview-ratings-outer"]')[0]
 
         for row in table:
