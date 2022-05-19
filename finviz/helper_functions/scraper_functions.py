@@ -20,7 +20,6 @@ def get_table(page_html: requests.Response, headers, rows=None, **kwargs):
 
     data_sets = []
     # Select the HTML of the rows and append each column text to a list
-    # Skip the first element ([1:]), since it's the headers (we already have it as a constant)
     all_rows = [
         column.xpath("td//text()")
         for column in page_parsed.cssselect('tr[valign="top"]')
