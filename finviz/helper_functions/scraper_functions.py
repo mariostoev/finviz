@@ -23,7 +23,7 @@ def get_table(page_html: requests.Response, headers, rows=None, **kwargs):
     # Skip the first element ([1:]), since it's the headers (we already have it as a constant)
     all_rows = [
         column.xpath("td//text()")
-        for column in page_parsed.cssselect('tr[valign="top"]')[0 : rows + 1]
+        for column in page_parsed.cssselect('tr[valign="top"]')
     ]
 
     # If rows is different from -2, this function is called from Screener
