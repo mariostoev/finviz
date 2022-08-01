@@ -163,7 +163,7 @@ You can contribute to the project by reporting bugs, suggesting enhancements, or
 
 *You can also buy me a coffee!*
 
-.. image:: https://hasutsuki.com/wp-content/uploads/2018/06/buy-me-a-coffee-with-paypal.png
+.. image:: https://user-images.githubusercontent.com/8982949/33011169-6da4af5e-cddd-11e7-94e5-a52d776b94ba.png
         :target: https://www.paypal.me/finvizapi
 
 Disclaimer
