@@ -1,19 +1,19 @@
 import json
 import pathlib
 import urllib.request
+from typing import List
 from urllib.parse import parse_qs as urlparse_qs
 from urllib.parse import urlencode, urlparse
 
-from bs4 import BeautifulSoup
-from user_agent import generate_user_agent
-
 import finviz.helper_functions.scraper_functions as scrape
+from bs4 import BeautifulSoup
 from finviz.helper_functions.display_functions import create_table_string
 from finviz.helper_functions.error_handling import InvalidTableType, NoResults
 from finviz.helper_functions.request_functions import (Connector,
                                                        http_request_get,
                                                        sequential_data_scrape)
 from finviz.helper_functions.save_data import export_to_csv, export_to_db
+from user_agent import generate_user_agent
 
 TABLE_TYPES = {
     "Overview": "111",
@@ -313,6 +313,11 @@ class Screener(object):
         """
 
         export_to_db(self.headers, self.data, filename)
+
+    def tickers(self) -> List[str]:
+        tickers: List[str] = [result.get('Ticker') for result in self.data]
+
+        return tickers
 
     def to_csv(self, filename: str):
         """Exports the generated table into a CSV file.
