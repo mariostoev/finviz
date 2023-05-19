@@ -71,7 +71,7 @@ def get_insider(ticker):
 
     get_page(ticker)
     page_parsed = STOCK_PAGE[ticker]
-    outer_table = page_parsed.cssselect('table[class="body-table"]')
+    outer_table = page_parsed.cssselect('table[class="body-table insider-trading-table"]')
 
     if len(outer_table) == 0:
         return []
