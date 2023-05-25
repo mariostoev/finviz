@@ -42,15 +42,11 @@ def get_total_rows(page_content):
     """ Returns the total number of rows(results). """
 
     total_element = page_content.cssselect('td[width="128"]')
-    if len(total_element) > 0:
-        content = etree.tostring(total_element[0]).decode("utf-8")
-        total_number = content.split("/")[1].split()[0]
-   
-        try:
-            return int(total_number)
-        except ValueError:
-            return 0
-    else:
+    total_number = (total_element[0].text.split()[2])
+
+    try:
+        return int(total_number)
+    except ValueError:
         return 0
 
 
