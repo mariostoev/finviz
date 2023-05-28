@@ -33,8 +33,8 @@ def get_stock(ticker):
     page_parsed = STOCK_PAGE[ticker]
 
     title = page_parsed.cssselect('table[class="fullview-title"]')[0]
-    keys = ["Company", "Sector", "Industry", "Country"]
-    fields = [f.text_content() for f in title.cssselect('a[class="tab-link"]')]
+    keys = ["Ticker","Company", "Sector", "Industry", "Country"]
+    fields = [f .text_content() for f in title.cssselect('a[class="tab-link"]')]
     data = dict(zip(keys, fields))
 
     company_link = title.cssselect('a[class="tab-link"]')[0].attrib["href"]
