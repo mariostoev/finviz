@@ -1,35 +1,32 @@
-[tool.poetry]
-name = "finviz"
-version = "1.4.4"
-description = "Unofficial API for finviz.com"
-authors = ["Mario Stoev <bg.mstoev@gmail.com>", "James Bury <jabury@sympatico.ca>"]
-license = "MIT"
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
-[tool.poetry.dependencies]
-python = "^3.8"
-beautifulsoup4 = "^4.9.3"
-requests = "^2.25.1"
-aiohttp = "^3.7.4"
-lxml = "^4.6.3"
-urllib3 = "^1.26.5"
-user_agent = "^0.1.9"
-cssselect = "^1.1.0"
-tqdm = "^4.61.1"
-tenacity = "^7.0.0"
+[tool.setuptools.packages]
+find = {} 
 
-[tool.poetry.dev-dependencies]
-black = "^21.6b0"
-isort = "^5.8.0"
-pytest = "^6.2.4"
-python-dateutil = "^2.8.1"
-
-[tool.pytest.ini_options]
-minversion = "6.0"
-filterwarnings = [
-    "ignore::DeprecationWarning",
-    "ignore::urllib3.exceptions.InsecureRequestWarning",
+[project]
+name = "finviz-platform"
+version = "0.0.1"
+authors = [
+    {name = "Alberto Rincones", email = "code4road@gmail.com"},
+]
+description = "Finviz scrapper with additinal datascience functionality"
+keywords = ["finviz", "finance", "datascience"]
+dependencies =[
+    "wheel",
+    "lxml",
+    "requests",
+    "aiohttp",
+    "urllib3",
+    "cssselect",
+    "user_agent",
+    "beautifulsoup4",
+    "tqdm",
+    "tenacity",
 ]
 
-[build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires-python = ">=3.8"
+
+[tools.setuptools]
+packages = ["finviz"]git
