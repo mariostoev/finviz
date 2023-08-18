@@ -41,13 +41,16 @@ def get_table(page_html: requests.Response, headers, rows=None, **kwargs):
 def get_total_rows(page_content):
     """ Returns the total number of rows(results). """
 
-    total_element = page_content.cssselect('td[width="128"]')
-    total_number = (total_element[0].text.split()[2])
-
-    try:
-        return int(total_number)
-    except ValueError:
-        return 0
+    options=[('class="count-text whitespace-nowrap">#1 / ',' Total</div>'),('class="count-text">#1 / ',' Total</td>')]
+    page_text = str(html.tostring(page_content))
+    for option_beg,option_end in options:
+        if option_beg in page_text:
+            total_number = page_text.split(option_beg)[1].split(option_end)[0]
+            try:
+                return int(total_number)
+            except ValueError:
+                return 0
+    return 0
 
 
 def get_page_urls(page_content, rows, url):
