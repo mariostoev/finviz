@@ -28,5 +28,5 @@ dependencies =[
 
 requires-python = ">=3.8"
 
-[tools.setuptools]
 packages = ["finviz"]
+[tools.setuptools]
