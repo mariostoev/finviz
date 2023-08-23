@@ -412,10 +412,18 @@ class Screener(object):
 
     def __get_table_headers(self):
         """ Private function used to return table headers. """
+        headers = []
 
-        return self._page_content.cssselect('tr[valign="middle"]')[0].xpath(
-            "td//text()"
-        )
+        header_elements = self._page_content.cssselect('tr[valign="middle"]')[0].xpath("td")
+        
+        for header_element in header_elements:
+            # Use normalize-space to extract text content while ignoring internal elements
+            header_text = header_element.xpath("normalize-space()")
+            
+            if header_text:
+                headers.append(header_text)
+        
+        return headers
 
     def __search_screener(self):
         """ Private function used to return data from the FinViz screener. """
