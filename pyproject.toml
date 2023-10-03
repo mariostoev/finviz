@@ -29,4 +29,4 @@ dependencies =[
 requires-python = ">=3.8"
 
 [tools.setuptools]
-packages = ["finviz"]git
+packages = ["finviz"]
