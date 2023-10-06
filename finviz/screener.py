@@ -414,7 +414,7 @@ class Screener(object):
         """ Private function used to return table headers. """
 
         return self._page_content.cssselect('tr[valign="middle"]')[0].xpath(
-            "td//text()"
+            "th//text()[normalize-space()]"
         )
 
     def __search_screener(self):
