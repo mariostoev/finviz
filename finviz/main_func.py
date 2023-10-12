@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from lxml import etree
+from cachetools import TTLCache
 
 from finviz.helper_functions.request_functions import http_request_get
 from finviz.helper_functions.scraper_functions import get_table
@@ -8,7 +9,7 @@ from finviz.helper_functions.scraper_functions import get_table
 STOCK_URL = "https://finviz.com/quote.ashx"
 NEWS_URL = "https://finviz.com/news.ashx"
 CRYPTO_URL = "https://finviz.com/crypto_performance.ashx"
-STOCK_PAGE = {}
+STOCK_PAGE = TTLCache(maxsize=100, ttl=60*15)
 
 
 def get_page(ticker):
