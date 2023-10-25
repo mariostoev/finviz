@@ -39,7 +39,7 @@ def get_stock(ticker):
     data["Company"] = company_details.text_content().strip()
     company_link = company_details.cssselect('a[class="tab-link block truncate"]')[0].attrib["href"]
     data["Website"] = company_link if company_link.startswith("http") else None
-    keys = ["Ticker","Company", "Sector", "Industry", "Country"]
+    keys = ["Sector", "Industry", "Country", "Exchange"]
     fields = [f.text_content() for f in title.cssselect('a[class="tab-link"]')]
     data.update(dict(zip(keys, fields)))
 
