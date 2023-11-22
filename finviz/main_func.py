@@ -19,6 +19,7 @@ def get_page(ticker):
             url=STOCK_URL, payload={"t": ticker}, parse=True
         )
 
+
 def get_stock(ticker):
     """
     Returns a dictionary containing stock data.
