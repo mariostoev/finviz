@@ -29,6 +29,9 @@ def get_stock(ticker):
     :return dict
     """
 
+    get_page(ticker)
+    page_parsed = STOCK_PAGE[ticker]
+
     title = page_parsed.cssselect('div[class="fv-container py-2.5"]')[0]
     data = {}
     data["Ticker"] = title.cssselect('h1[class="js-recent-quote-ticker quote-header_ticker-wrapper_ticker"]')[0].text_content().strip()
