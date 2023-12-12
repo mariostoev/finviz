@@ -1,3 +1,7 @@
+finviz/filters.json
+finviz-platform.code-workspace
+BACKLOG.md 
+NOTES.md
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
