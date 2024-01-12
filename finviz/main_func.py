@@ -32,16 +32,13 @@ def get_stock(ticker):
     get_page(ticker)
     page_parsed = STOCK_PAGE[ticker]
 
-    title = page_parsed.cssselect('div[class="fv-container py-2.5"]')[0]
-    data = {}
-    data["Ticker"] = title.cssselect('h1[class="js-recent-quote-ticker quote-header_ticker-wrapper_ticker"]')[0].text_content().strip()
-    company_details = title.cssselect('h2[class="quote-header_ticker-wrapper_company"]')[0]
-    data["Company"] = company_details.text_content().strip()
-    company_link = company_details.cssselect('a[class="tab-link block truncate"]')[0].attrib["href"]
-    data["Website"] = company_link if company_link.startswith("http") else None
-    keys = ["Sector", "Industry", "Country", "Exchange"]
+    title = page_parsed.cssselect('table[class="fullview-title"]')[0]
+    keys = ["Company", "Sector", "Industry", "Country"]
     fields = [f.text_content() for f in title.cssselect('a[class="tab-link"]')]
-    data.update(dict(zip(keys, fields)))
+    data = dict(zip(keys, fields))
+
+    company_link = title.cssselect('a[class="tab-link"]')[0].attrib["href"]
+    data["Website"] = company_link if company_link.startswith("http") else None
 
     all_rows = [
         row.xpath("td//text()")
@@ -74,7 +71,7 @@ def get_insider(ticker):
 
     get_page(ticker)
     page_parsed = STOCK_PAGE[ticker]
-    outer_table = page_parsed.cssselect('table[class="body-table insider-trading-table"]')
+    outer_table = page_parsed.cssselect('table[class="body-table"]')
 
     if len(outer_table) == 0:
         return []

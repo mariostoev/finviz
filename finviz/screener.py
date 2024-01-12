@@ -250,9 +250,9 @@ class Screener(object):
         # Use one of the text values and get the parent table from that
         bs = BeautifulSoup(html, "html.parser")
         filters_table = None
-        for td in bs.find_all("td"):
-            if td.get_text().strip() == "Exchange":
-                filters_table = td.find_parent("table")
+        for th in bs.find_all("th"):
+            if th.get_text().strip() == "Exchange":
+                filters_table = th.find_parent("table")
         if filters_table is None:
             raise Exception("Could not locate filter parameters")
 
@@ -262,18 +262,18 @@ class Screener(object):
 
         # Populate dict with filtering options and corresponding filter tags
         filter_dict = {}
-        td_list = filters_table.find_all("td")
+        th_list = filters_table.find_all("th")
 
-        for i in range(0, len(td_list) - 2, 2):
+        for i in range(0, len(th_list) - 2, 2):
             current_dict = {}
-            if td_list[i].get_text().strip() == "":
+            if th_list[i].get_text().strip() == "":
                 continue
 
-            # Even td elements contain filter name (as shown on web page)
-            filter_text = td_list[i].get_text().strip()
+            # Even th elements contain filter name (as shown on web page)
+            filter_text = th_list[i].get_text().strip()
 
-            # Odd td elements contain the filter tag and options
-            selections = td_list[i + 1].find("select")
+            # Odd th elements contain the filter tag and options
+            selections = th_list[i + 1].find("select")
             filter_name = selections.get("data-filter").strip()
 
             # Store filter options for current filter
@@ -412,18 +412,10 @@ class Screener(object):
 
     def __get_table_headers(self):
         """ Private function used to return table headers. """
-        headers = []
 
-        header_elements = self._page_content.cssselect('tr[valign="middle"]')[0].xpath("th")
-        
-        for header_element in header_elements:
-            # Use normalize-space to extract text content while ignoring internal elements
-            header_text = header_element.xpath("normalize-space()")
-            
-            if header_text:
-                headers.append(header_text)
-        
-        return headers
+        return self._page_content.cssselect('tr[valign="middle"]')[0].xpath(
+            "th//text()"
+        )
 
     def __search_screener(self):
         """ Private function used to return data from the FinViz screener. """
