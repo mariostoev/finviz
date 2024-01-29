@@ -107,10 +107,13 @@ def get_news(ticker):
     results = []
     date = None
     for row in rows:
-        raw_timestamp = row.xpath("./td")[0].xpath("text()")[0][0:-2]
+        raw_timestamp = str(row.xpath("./td")[0].xpath("text()")[0][0:-2]).strip()
 
         if len(raw_timestamp) > 8:
-            parsed_timestamp = datetime.strptime(raw_timestamp, "%b-%d-%y %I:%M%p")
+            if 'Today' in raw_timestamp:
+                parsed_timestamp = datetime.now()
+            else:
+                parsed_timestamp = datetime.strptime(raw_timestamp, "%b-%d-%y %I:%M%p")
             date = parsed_timestamp.date()
         else:
             parsed_timestamp = datetime.strptime(raw_timestamp, "%I:%M%p").replace(
