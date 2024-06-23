@@ -1,6 +1,8 @@
 import asyncio
 import os
-from typing import Callable, Dict, List
+import random
+import time
+from typing import Callable, Dict, List, Final, Optional
 
 import aiohttp
 import requests
@@ -13,6 +15,7 @@ from user_agent import generate_user_agent
 
 from finviz.config import connection_settings
 from finviz.helper_functions.error_handling import ConnectionTimeout
+
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -50,26 +53,35 @@ def http_request_get(
         raise ConnectionTimeout(url)
 
 
-@tenacity.retry(wait=tenacity.wait_exponential())
-def finviz_request(url: str, user_agent: str) -> Response:
+# List of user agents for rotation
+USER_AGENTS: Final = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+    "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15",
+]
+
+@tenacity.retry(wait=tenacity.wait_exponential(multiplier=1, min=4, max=10))
+def finviz_request(url: str, user_agent: str) -> requests.Response:
     response = requests.get(url, headers={"User-Agent": user_agent})
     if response.text == "Too many requests.":
         raise Exception("Too many requests.")
     return response
 
-
 def sequential_data_scrape(
-    scrape_func: Callable, urls: List[str], user_agent: str, *args, **kwargs
+    scrape_func: Callable, urls: List[str], user_agent: Optional[str], *args, **kwargs
 ) -> List[Dict]:
     data = []
 
     for url in tqdm(urls, disable="DISABLE_TQDM" in os.environ):
+        user_agent = random.choice(USER_AGENTS) if not user_agent else user_agent  # Rotate user agents
         try:
             response = finviz_request(url, user_agent)
             kwargs["URL"] = url
             data.append(scrape_func(response, *args, **kwargs))
+            time.sleep(random.uniform(1, 3))  # Add a random delay between requests
         except Exception as exc:
-            raise exc
+            print(f"Error fetching {url}: {exc}")
+            continue  # Skip this URL and move to the next one
 
     return data
 
