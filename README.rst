@@ -4,168 +4,257 @@ finviz-api
 
 .. image:: https://badge.fury.io/py/finviz.svg
     :target: https://badge.fury.io/py/finviz
-    
-.. image:: https://img.shields.io/badge/python-3.9-blue.svg
-    :target: https://www.python.org/downloads/release/python-390/
-    
+
+.. image:: https://img.shields.io/badge/python-3.10+-blue.svg
+    :target: https://www.python.org/downloads/
+
 .. image:: https://pepy.tech/badge/finviz
     :target: https://pepy.tech/project/finviz
-    
 
-Downloading & Installation
----------------------------
+.. image:: https://github.com/mariostoev/finviz/actions/workflows/ci.yml/badge.svg
+    :target: https://github.com/mariostoev/finviz/actions
 
-    $ pip install -U git+https://github.com/mariostoev/finviz
+
+What's New in v2.0
+==================
+
+**v2.0.0** is a major update that fixes all scraping issues caused by FinViz website changes:
+
+- Fixed ``get_stock()`` - now returns 90+ data points
+- Fixed ``Screener`` - table parsing and header extraction
+- Fixed ``get_news()`` - handles new timestamp formats
+- Fixed ``get_insider()`` - supports new table structure
+- Fixed ``get_analyst_price_targets()`` - updated selectors
+- **Python 3.10+** required (dropped 3.9 support)
+- Comprehensive test suite with real API testing
+
+See `CHANGELOG.md <CHANGELOG.md>`_ for full details.
+
+
+Installation
+============
+
+.. code:: bash
+
+    pip install finviz
+
+Or install the latest development version:
+
+.. code:: bash
+
+    pip install git+https://github.com/mariostoev/finviz@v2-development
 
 
 What is Finviz?
-================
+===============
+
 FinViz_ aims to make market information accessible and provides a lot of data in visual snapshots, allowing traders and investors to quickly find the stock, future or forex pair they are looking for. The site provides advanced screeners, market maps, analysis, comparative tools, and charts.
 
-.. _FinViz: https://finviz.com/?a=128493348
+.. _FinViz: https://finviz.com
 
 **Important Information**
 
 Any quotes data displayed on finviz.com is delayed by 15 minutes for NASDAQ, and 20 minutes for NYSE and AMEX. This API should **NOT** be used for live trading, it's main purpose is financial analysis, research, and data scraping.
 
+
+Quick Start
+===========
+
+.. code:: python
+
+    import finviz
+
+    # Get stock data
+    stock = finviz.get_stock('AAPL')
+    print(stock['Price'], stock['P/E'], stock['Market Cap'])
+
+    # Get news
+    news = finviz.get_news('AAPL')
+    for timestamp, headline, url, source in news[:5]:
+        print(f"{timestamp} - {headline} ({source})")
+
+    # Get insider transactions
+    insiders = finviz.get_insider('AAPL')
+    for trade in insiders[:3]:
+        print(trade['Insider Trading'], trade['Transaction'], trade['Value ($)'])
+
+    # Get analyst price targets
+    targets = finviz.get_analyst_price_targets('AAPL')
+    for target in targets:
+        print(target['analyst'], target['rating'], target.get('target_to'))
+
+
 Using Screener
-===============
+==============
 
-Before using the Screener class, you have to manually go to the website's screener and enter your desired settings. The URL will automatically change every time you add a new setting. After you're done the URL will look something like this:
-
-.. image:: https://i.imgur.com/p8BLt06.png
-
-``?v=111&s=ta_newhigh&f=cap_largeover,exch_nasd,fa_fpe_o10&o=-ticker&t=ZM`` are the extra parameters provided to the screener. Those parameters are a list of key/value pairs separated with the & symbol. Some keys have a clear intent - ``f=cap_largeover,exch_nasd,fa_fpe_o10`` are filters, ``o=-ticker`` is order and ``t=ZM`` are tickers - yet, some are ambiguous like ``v=111``, which stands for the type of table. 
-
-To make matters easier inside the code you won't refer to tables by their number tag, but instead you will use their full name (ex. ``table=Performance``).
+The Screener allows you to filter stocks based on various criteria. You can either build filters programmatically or copy them from the FinViz website URL.
 
 .. code:: python
 
     from finviz.screener import Screener
 
-    filters = ['exch_nasd', 'idx_sp500']  # Shows companies in NASDAQ which are in the S&P500
-    stock_list = Screener(filters=filters, table='Performance', order='price')  # Get the performance table and sort it by price ascending
+    # Screen for large-cap NASDAQ stocks in the S&P 500
+    filters = ['exch_nasd', 'idx_sp500', 'cap_largeover']
+    stock_list = Screener(filters=filters, table='Overview', order='price')
 
-    # Export the screener results to .csv 
-    stock_list.to_csv("stock.csv")
+    print(f"Found {len(stock_list)} stocks")
 
-    # Create a SQLite database 
-    stock_list.to_sqlite("stock.sqlite3")
+    for stock in stock_list[:10]:
+        print(stock['Ticker'], stock['Company'], stock['Market Cap'])
 
-    for stock in stock_list[9:19]:  # Loop through 10th - 20th stocks 
-        print(stock['Ticker'], stock['Price']) # Print symbol and price
+    # Export to CSV
+    stock_list.to_csv("stocks.csv")
 
-    # Add more filters
-    stock_list.add(filters=['fa_div_high'])  # Show stocks with high dividend yield
-    # or just stock_list(filters=['fa_div_high'])
+    # Export to SQLite
+    stock_list.to_sqlite("stocks.sqlite3")
 
-    # Print the table into the console
-    print(stock_list)
-    
-.. image:: https://i.imgur.com/cb7UdxB.png
+**Available Tables:**
+
+- ``Overview`` - Basic company info, market cap, price
+- ``Valuation`` - P/E, P/S, P/B, PEG ratios
+- ``Financial`` - ROA, ROE, ROI, margins
+- ``Ownership`` - Insider/institutional ownership, short interest
+- ``Performance`` - Price performance across timeframes
+- ``Technical`` - RSI, SMA, volatility, beta
+
+**Initialize from URL:**
+
+.. code:: python
+
+    # Copy filters directly from FinViz website URL
+    url = "https://finviz.com/screener.ashx?v=111&f=cap_largeover,exch_nasd&o=-marketcap"
+    stock_list = Screener.init_from_url(url)
+
+**Get Available Filters:**
+
+.. code:: python
+
+    # Get all available filter options
+    filters = Screener.load_filter_dict()
+    print(filters.keys())  # ['Exchange', 'Index', 'Sector', 'Industry', ...]
+
+
+Individual Stock Functions
+==========================
+
+.. code:: python
+
+    import finviz
+
+    # Comprehensive stock data (90+ metrics)
+    stock = finviz.get_stock('AAPL')
+    # Returns: {'Ticker': 'AAPL', 'Company': 'Apple Inc', 'Sector': 'Technology',
+    #           'P/E': '34.26', 'Market Cap': '3755.76B', 'Price': '255.53', ...}
+
+    # Recent news with timestamps
+    news = finviz.get_news('AAPL')
+    # Returns: [('2024-01-15 12:00', 'Headline...', 'https://...', 'MarketWatch'), ...]
+
+    # Insider trading activity
+    insiders = finviz.get_insider('AAPL')
+    # Returns: [{'Insider Trading': 'COOK TIMOTHY D', 'Relationship': 'CEO',
+    #            'Transaction': 'Sale', 'Value ($)': '41,530,891', ...}, ...]
+
+    # Analyst ratings and price targets
+    targets = finviz.get_analyst_price_targets('AAPL', last_ratings=10)
+    # Returns: [{'date': '2024-01-09', 'analyst': 'Morgan Stanley',
+    #            'rating': 'Overweight', 'target_from': 200, 'target_to': 220}, ...]
+
+    # All market news (not ticker-specific)
+    all_news = finviz.get_all_news()
+
 
 Using Portfolio
-================
+===============
+
 .. code:: python
 
     from finviz.portfolio import Portfolio
 
-    portfolio = Portfolio('<your-email-address>', '<your-password>', '<portfolio-name>')
-    # Print the portfolio into the console
+    portfolio = Portfolio('<email>', '<password>', '<portfolio-name>')
     print(portfolio)
-    
-*Note that, portfolio name is optional - it would assume your default portfolio (if you have one) if you exclude it.*
-The Portfolio class can also create new portfolio from an existing ``.csv`` file. The ``.csv`` file must be in the following format:
 
+    # Create portfolio from CSV
+    portfolio.create_portfolio('My Portfolio', 'positions.csv')
 
-.. list-table:: 
+CSV format for portfolio import:
+
+.. list-table::
    :header-rows: 1
 
    * - Ticker
-     - Transaction  
+     - Transaction
      - Date (Opt.)
      - Shares
      - Price (Opt.)
    * - AAPL
      - 1
-     - 05-25-2017
+     - 05-25-2024
      - 34
-     - 141.28
+     - 185.50
    * - NVDA
-     - 2
-     - 
-     - 250
-     - 243.32
-   * - WMT
      - 1
-     - 01.19.2019
-     - 45
-     - 
- 
-Note that, if any *optional* fields are left empty, the API will assign them today's data.
+     -
+     - 100
+     -
 
-.. code:: python
+*Transaction: 1 = Buy, 2 = Sell. Empty optional fields use today's data.*
 
-    portfolio.create_portfolio('<portfolio-name>', '<path-to-csv-file>')
 
-Individual stocks
+Downloading Charts
 ==================
 
-.. code:: pycon
+.. code:: python
 
-    >>> import finviz
-    >>> finviz.get_stock('AAPL')
-    {'Index': 'DJIA S&P500', 'P/E': '12.91', 'EPS (ttm)': '12.15',...
-    >>> finviz.get_insider('АAPL')
-    [{'Insider Trading': 'KONDO CHRIS', 'Relationship': 'Principal Accounting Officer', 'Date': 'Nov 19', 'Transaction':            'Sale', 'Cost': '190.00', '#Shares': '3,408', 'Value ($)': '647,520', '#Shares Total': '8,940', 'SEC Form 4': 'Nov 21           06:31 PM'},...
-    >>> finviz.get_news('AAPL')
-    [('Chinas Economy Slows to the Weakest Pace Since 2009', 'https://finance.yahoo.com/news/china-economy-slows-weakest-pace-      020040147.html'),...
-    >>>
-    >>> finviz.get_analyst_price_targets('AAPL')
-    [{'date': '2019-10-24', 'category': 'Reiterated', 'analyst': 'UBS', 'rating': 'Buy', 'price_from': 235, 'price_to': 275}, ...
+    stock_list.get_charts(period='d', chart_type='c', size='l', ta='1')
 
-Downloading charts
-===================
+    # period: 'd' (daily), 'w' (weekly), 'm' (monthly)
+    # chart_type: 'c' (candle), 'l' (line)
+    # size: 's' (small), 'l' (large)
+    # ta: '1' (show technical analysis), '0' (hide)
+
+
+Configuration
+=============
+
+**Environment Variables:**
+
+- ``DISABLE_TQDM=1`` - Disable progress bars
+
+**Async Support:**
+
+The Screener supports async requests for faster data fetching:
 
 .. code:: python
-    
-    # Monthly, Candles, Large, No Technical Analysis
-    stock_list.get_charts(period='m', chart_type='c', size='l', ta='0')
-    
-    # period='d' > daily 
-    # period='w' > weekly
-    # period='m' > monthly
-    
-    # chart_type='c' > candle
-    # chart_type='l' > lines
-    
-    # size='m' > small
-    # size='l' > large
-    
-    # ta='1' > display technical analysis
-    # ta='0' > ignore technical analysis
-    
-Environment Variables
-======================
 
-Set ``DISABLE_TQDM=1`` in your environment to disable the progress bar.
+    stock_list = Screener(filters=filters, request_method="async")
 
-Documentation
-==============
 
-You can read the rest of the documentation inside the docstrings.
+Development
+===========
 
-Contributing 
-=============
-You can contribute to the project by reporting bugs, suggesting enhancements, or directly by extending and writing features (see the ongoing projects_).
+.. code:: bash
 
-.. _projects: https://github.com/mariostoev/finviz/projects/1
+    # Clone and install in development mode
+    git clone https://github.com/mariostoev/finviz
+    cd finviz
+    pip install -e ".[dev]"
+
+    # Run tests
+    pytest finviz/tests/ -v
+
+    # Run tests (skip slow ones)
+    pytest finviz/tests/ -v -m "not slow"
+
 
 *You can also buy me a coffee!*
 
 .. image:: https://user-images.githubusercontent.com/8982949/33011169-6da4af5e-cddd-11e7-94e5-a52d776b94ba.png
         :target: https://www.paypal.me/finvizapi
 
+
 Disclaimer
------------
-*Using the library to acquire data from FinViz is against their Terms of Service and robots.txt. Use it responsibly and at your own risk. This library is built purely for educational purposes.*
+==========
+
+*Using this library to acquire data from FinViz may be against their Terms of Service. Use it responsibly and at your own risk. This library is built for educational purposes.*
+
