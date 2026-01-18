@@ -9,16 +9,15 @@ import urllib3
 from lxml import html
 from requests import Response
 from tqdm import tqdm
-from user_agent import generate_user_agent
 
-from finviz.config import connection_settings
+from finviz.config import USER_AGENT, connection_settings
 from finviz.helper_functions.error_handling import ConnectionTimeout
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def http_request_get(
-    url, session=None, payload=None, parse=True, user_agent=generate_user_agent()
+    url, session=None, payload=None, parse=True, user_agent=USER_AGENT
 ):
     """ Sends a GET HTTP request to a website and returns its HTML content and full url address. """
 

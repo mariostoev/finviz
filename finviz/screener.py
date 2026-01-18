@@ -1,12 +1,12 @@
 import json
 import pathlib
-import urllib.request
 from urllib.parse import parse_qs as urlparse_qs
 from urllib.parse import urlencode, urlparse
 
-from bs4 import BeautifulSoup
-from user_agent import generate_user_agent
+import requests
+from lxml import html as lxml_html
 
+from finviz.config import USER_AGENT
 import finviz.helper_functions.scraper_functions as scrape
 from finviz.helper_functions.display_functions import create_table_string
 from finviz.helper_functions.error_handling import InvalidTableType, NoResults
@@ -68,7 +68,7 @@ class Screener(object):
         signal="",
         table=None,
         custom=None,
-        user_agent=generate_user_agent(),
+        user_agent=USER_AGENT,
         request_method="sequential",
     ):
         """
@@ -237,56 +237,55 @@ class Screener(object):
                 return json.load(fp)
 
         # Get html from main filter page, ft=4 ensures all filters are present
-        hdr = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) "
-            "Chrome/23.0.1271.64 Safari/537.11"
-        }
         url = "https://finviz.com/screener.ashx?ft=4"
-        req = urllib.request.Request(url, headers=hdr)
-        with urllib.request.urlopen(req) as response:
-            html = response.read().decode("utf-8")
+        response = requests.get(url, headers={"User-Agent": USER_AGENT}, verify=False)
+        response.raise_for_status()
+        html_content = response.text
 
-        # Parse html and locate table we are interested in.
-        # Use one of the text values and get the parent table from that
-        bs = BeautifulSoup(html, "html.parser")
+        # Parse html with lxml and locate the filters table
+        tree = lxml_html.fromstring(html_content)
+
+        # Find the table containing "Exchange" text (filters table)
         filters_table = None
-        for td in bs.find_all("td"):
-            if td.get_text().strip() == "Exchange":
-                filters_table = td.find_parent("table")
+        for td in tree.iter("td"):
+            text = td.text_content().strip()
+            if text == "Exchange":
+                # Walk up to find parent table
+                parent = td.getparent()
+                while parent is not None:
+                    if parent.tag == "table":
+                        filters_table = parent
+                        break
+                    parent = parent.getparent()
+                break
+
         if filters_table is None:
             raise Exception("Could not locate filter parameters")
 
-        # Delete all div tags, we don't need them
-        for div in filters_table.find_all("div"):
-            div.decompose()
-
         # Populate dict with filtering options and corresponding filter tags
         filter_dict = {}
-        td_list = filters_table.find_all("td")
+        td_list = list(filters_table.iter("td"))
 
-        for i in range(0, len(td_list) - 2, 2):
+        for i in range(0, len(td_list) - 1, 2):
             current_dict = {}
-            if td_list[i].get_text().strip() == "":
+            filter_text = td_list[i].text_content().strip()
+            if filter_text == "":
                 continue
 
-            # Even td elements contain filter name (as shown on web page)
-            filter_text = td_list[i].get_text().strip()
-
             # Odd td elements contain the filter tag and options
-            selections = td_list[i + 1].find("select")
-            filter_name = selections.get("data-filter").strip()
+            select_elem = td_list[i + 1].find(".//select")
+            if select_elem is None:
+                continue
+
+            filter_name = select_elem.get("data-filter", "").strip()
 
             # Store filter options for current filter
-            options = selections.find_all("option", {"value": True})
-            for opt in options:
-                # Encoded filter string
-                value = opt.get("value").strip()
-
-                # String shown in pull-down menu
-                text = opt.get_text()
+            for opt in select_elem.findall("option"):
+                value = opt.get("value", "").strip()
+                text = opt.text_content() if opt.text_content() else ""
 
                 # Filter out unwanted items
-                if value is None or "Elite" in text:
+                if not value or "Elite" in text:
                     continue
 
                 # Make filter string and store in dict

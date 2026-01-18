@@ -2,8 +2,8 @@ import csv
 
 import requests
 from lxml import html
-from user_agent import generate_user_agent
 
+from finviz.config import USER_AGENT
 from finviz.helper_functions.display_functions import create_table_string
 from finviz.helper_functions.error_handling import (InvalidPortfolioID,
                                                     InvalidTicker,
@@ -47,7 +47,7 @@ class Portfolio(object):
         # Create a session and log in by sending a POST request
         self._session = requests.session()
         auth_response = self._session.post(
-            LOGIN_URL, data=payload, headers={"User-Agent": generate_user_agent()}
+            LOGIN_URL, data=payload, headers={"User-Agent": USER_AGENT}
         )
 
         if not auth_response.ok:  # If the post request wasn't successful
