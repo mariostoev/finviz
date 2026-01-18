@@ -414,15 +414,27 @@ class Screener(object):
         """ Private function used to return table headers. """
         headers = []
 
-        header_elements = self._page_content.cssselect('tr[valign="middle"]')[0].xpath("td")
-        
+        # Try new structure with <th> elements first
+        header_rows = self._page_content.cssselect('tr[valign="middle"]')
+        if not header_rows:
+            return headers
+
+        header_row = header_rows[0]
+
+        # Try <th> elements first (new structure)
+        header_elements = header_row.cssselect('th')
+
+        # Fallback to <td> elements (old structure)
+        if not header_elements:
+            header_elements = header_row.xpath("td")
+
         for header_element in header_elements:
-            # Use normalize-space to extract text content while ignoring internal elements
-            header_text = header_element.xpath("normalize-space()")
-            
+            # Use text_content() to get all text including from nested elements
+            header_text = header_element.text_content().strip()
+
             if header_text:
                 headers.append(header_text)
-        
+
         return headers
 
     def __search_screener(self):
