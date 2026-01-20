@@ -341,6 +341,24 @@ class Screener(object):
 
         return export_to_csv(self.headers, self.data, f"{filename}.csv")
 
+    def to_dataframe(self):
+        """Exports the generated table to a pandas DataFrame.
+
+        Requires pandas to be installed: pip install pandas
+
+        :return: pandas DataFrame
+        :raises ImportError: if pandas is not installed
+        """
+        try:
+            import pandas as pd
+        except ImportError:
+            raise ImportError(
+                "pandas is required for to_dataframe(). "
+                "Install with: pip install pandas"
+            )
+
+        return pd.DataFrame(self.data)
+
     def get_charts(self, period="d", size="l", chart_type="c", ta="1"):
         """
         Downloads the charts of all tickers shown by the table.

@@ -108,6 +108,9 @@ The Screener allows you to filter stocks based on various criteria. You can eith
     # Export to SQLite
     stock_list.to_sqlite("stocks.sqlite3")
 
+    # Export to pandas DataFrame (requires pandas)
+    df = stock_list.to_dataframe()
+
 **Available Tables:**
 
 - ``Overview`` - Basic company info, market cap, price
