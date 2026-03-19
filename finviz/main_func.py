@@ -298,16 +298,26 @@ def get_all_news():
 def get_crypto(pair):
     """
 
-    :param pair: crypto pair
+    :param pair: crypto pair symbol (e.g. "ETHUSD"), case-insensitive; or row index (int)
     :return: dictionary
     """
 
     page_parsed, _ = http_request_get(url=CRYPTO_URL, parse=True)
     page_html, _ = http_request_get(url=CRYPTO_URL, parse=False)
-    crypto_headers = page_parsed.cssselect('tr[valign="middle"]')[0].xpath("td//text()")
+    header_row = page_parsed.cssselect('tr[valign="middle"]')[0]
+    crypto_headers = [t.strip() for t in header_row.xpath(".//th//text()") if t.strip()]
+    if not crypto_headers:
+        crypto_headers = [t.strip() for t in header_row.xpath(".//td//text()") if t.strip()]
     crypto_table_data = get_table(page_html, crypto_headers)
 
-    return crypto_table_data[pair]
+    if isinstance(pair, int):
+        return crypto_table_data[pair]
+
+    key = str(pair).strip().upper()
+    for row in crypto_table_data:
+        if row.get("Ticker", "").strip().upper() == key:
+            return row
+    raise KeyError(f"Crypto pair not found: {pair!r}")
 
 
 def get_analyst_price_targets(ticker, last_ratings=5):
