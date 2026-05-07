@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+yfinance
+httpx
+requests
+lxml
+cssselect
+openai
