@@ -24,9 +24,10 @@ class TestGetStock:
     def test_has_basic_info(self, stock_data: dict):
         """Stock data should contain basic company information."""
         required_keys = ["Ticker", "Company", "Sector", "Industry", "Country"]
-        for key in required_keys:
-            assert key in stock_data, f"Missing key: {key}"
-            assert stock_data[key], f"Empty value for: {key}"
+        missing = [key for key in required_keys if key not in stock_data]
+        assert not missing, f"Missing keys: {missing}"
+        empty = [key for key in required_keys if not stock_data[key]]
+        assert not empty, f"Empty values for: {empty}"
 
     @pytest.mark.network
     def test_has_financial_metrics(self, stock_data: dict):
