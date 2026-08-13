@@ -60,14 +60,18 @@ def get_stock(ticker):
         data["Company"] = ""
         data["Website"] = None
 
-    # Sector, Industry, Country from the quote-links section
-    quote_links = page_parsed.cssselect('div.quote-links a.tab-link')
+    # Sector, Industry, Country from the quote-header categories section
+    quote_links = page_parsed.cssselect('div.quote-header_categories a.quote-header_category')
     sector_industry_country = []
     for link in quote_links:
         href = link.attrib.get("href", "")
         # Links to screener with sector/industry/country filters
         if "f=sec_" in href or "f=ind_" in href or "f=geo_" in href:
-            sector_industry_country.append(link.text_content().strip())
+            # The industry link's visible text may be CSS-truncated; the
+            # anchor's title attribute carries the untruncated value.
+            title = link.attrib.get("title")
+            text = title.strip() if title else link.text_content().strip()
+            sector_industry_country.append(text)
 
     if len(sector_industry_country) >= 3:
         data["Sector"] = sector_industry_country[0]
