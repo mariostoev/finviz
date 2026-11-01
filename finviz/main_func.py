@@ -66,7 +66,7 @@ def get_stock(ticker):
     for link in quote_links:
         href = link.attrib.get("href", "")
         # Links to screener with sector/industry/country filters
-        if "f=sec_" in href or "f=ind_" in href or "f=geo_" in href:
+        if "f=sec_" in href or "f=ind_" in href or "f=geo_" in href or "etf_sectype_" in href:
             # The industry link's visible text may be CSS-truncated; the
             # anchor's title attribute carries the untruncated value.
             title = link.attrib.get("title")
