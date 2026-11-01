@@ -287,7 +287,8 @@ def get_all_news():
 
     page_parsed, _ = http_request_get(url=NEWS_URL, parse=True)
     all_dates = [
-        row.text_content() for row in page_parsed.cssselect('td[class="nn-date"]')
+        row.text_content()
+        for row in page_parsed.cssselect("td.news_date-cell, td.nn-date")
     ]
     all_headlines = [
         row.text_content() for row in page_parsed.cssselect('a[class="nn-tab-link"]')

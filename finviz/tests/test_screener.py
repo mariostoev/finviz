@@ -4,14 +4,155 @@ Tests for the Screener class.
 All tests make real HTTP requests to finviz.com.
 """
 
+import json
 import time
+import warnings
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
+from lxml import html
 
 from finviz import Screener
+from finviz.helper_functions.scraper_functions import get_page_urls, get_table
 from finviz.main_func import get_all_news, get_analyst_price_targets
+
+
+class TestGetTableInput:
+    """Offline tests for the page types get_table accepts."""
+
+    PAGE = (
+        '<div><div class="fv-table_row" role="row">'
+        '<div role="gridcell" data-ticker="AAPL">logo AAPL</div>'
+        '<div role="gridcell"> 344.63 </div>'
+        "</div></div>"
+    )
+
+    def test_accepts_parsed_page(self):
+        """request_method="async" passes get_table an already parsed page."""
+        data = get_table(html.fromstring(self.PAGE), ["Ticker", "Price"], rows=1)
+        assert data == [{"Ticker": "AAPL", "Price": "344.63"}]
+
+    def test_accepts_page_text(self):
+        """Sequential requests pass get_table the page text."""
+        data = get_table(self.PAGE, ["Ticker", "Price"], rows=1)
+        assert data == [{"Ticker": "AAPL", "Price": "344.63"}]
+
+
+class TestRowAndColumnLimits:
+    """Offline tests for the limits of what Finviz serves."""
+
+    @staticmethod
+    def page(total=1, colcount=1):
+        return html.fromstring(
+            f'<div><p class="fv-table_toolbar-count">#1 / {total} Total</p>'
+            f'<div class="fv-table_viewport" role="grid" aria-colcount="{colcount}">'
+            '<div class="fv-table_header-row"><div role="columnheader">Ticker</div></div>'
+            "</div></div>"
+        )
+
+    def build(self, page, rows):
+        with patch("finviz.screener.http_request_get", return_value=(page, "https://x?v=111")):
+            with patch("finviz.screener.sequential_data_scrape", return_value=[rows]):
+                return Screener()
+
+    def test_page_urls_stop_at_row_limit(self):
+        """Finviz answers requests past row 1000 with a 403."""
+        pager = html.fromstring(
+            '<div><button aria-label="Page">'
+            '<span class="select-trigger_label">1 / 53</span></button></div>'
+        )
+        urls = get_page_urls(pager, 1050, "u")
+        assert len(urls) == 50
+        assert urls[-1] == "u&r=981"
+
+    def test_warns_when_rows_are_missing(self):
+        """Len and data should agree, and the user should hear about the shortfall."""
+        with pytest.warns(UserWarning, match="1 of 1050 rows"):
+            screener = self.build(self.page(total=1050), [{"Ticker": "AAPL"}])
+        assert len(screener) == len(screener.data) == 1
+
+    def test_short_result_does_not_limit_later_queries(self):
+        """A short result, such as after a temporary block, should not stick."""
+        with pytest.warns(UserWarning, match="1 of 2 rows"):
+            screener = self.build(self.page(total=2), [{"Ticker": "AAPL"}])
+
+        full_rows = [{"Ticker": "AAPL"}, {"Ticker": "MSFT"}]
+        with patch("finviz.screener.http_request_get", return_value=(self.page(total=2), "https://x?v=111")):
+            with patch("finviz.screener.sequential_data_scrape", return_value=[full_rows]):
+                screener.add(order="-price")
+
+        assert len(screener) == len(screener.data) == 2
+
+    def test_warns_when_columns_are_missing(self):
+        """The server renders only some columns of a wide custom table."""
+        with pytest.warns(UserWarning, match="1 of 70 columns"):
+            self.build(self.page(colcount=70), [{"Ticker": "AAPL"}])
+
+    def test_no_warning_for_a_complete_result(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            screener = self.build(self.page(), [{"Ticker": "AAPL"}])
+        assert len(screener) == 1
+
+
+class TestLoadFilterDictOffline:
+    """Offline test for the filter definitions embedded in the page."""
+
+    @staticmethod
+    def page(filter_defs):
+        payload = json.dumps({"filters": {"filters": filter_defs}}, separators=(",", ":"))
+        return MagicMock(text=f"<html><body><script data-ssr-props>{payload}</script></body></html>")
+
+    def test_builds_filters_from_stock_and_etf_pages(self):
+        stock_page = self.page(
+            [
+                {
+                    "key": "cap",
+                    "title": {"short": "Market Cap."},
+                    "options": [
+                        {"label": "Any", "value": ""},
+                        {"label": "Mega", "value": "mega"},
+                        {"label": "Custom", "value": "custom", "isEliteOnly": True},
+                    ],
+                },
+                {
+                    "key": "sh_insiderown",
+                    "title": {"short": "Insider\nOwnership"},
+                    "options": [{"label": "Low", "value": "low"}],
+                },
+                {
+                    "key": "sh_trades",
+                    "isEliteOnly": True,
+                    "title": {"short": "Trades"},
+                    "options": [{"label": "Over 100", "value": "o100"}],
+                },
+            ]
+        )
+        etf_page = self.page(
+            [
+                {
+                    "key": "cap",
+                    "title": {"short": "Market Cap."},
+                    "options": [{"label": "ETF option", "value": "etf"}],
+                },
+                {
+                    "key": "etf_assettype",
+                    "title": {"short": "Asset Type"},
+                    "options": [{"label": "Bonds", "value": "bonds"}],
+                },
+            ]
+        )
+
+        with patch("finviz.screener.requests.get", side_effect=[stock_page, etf_page]):
+            with patch("finviz.screener.open", mock_open(), create=True):
+                filters = Screener.load_filter_dict(reload=False)
+
+        assert filters == {
+            "Market Cap.": {"Mega": "cap_mega"},
+            "InsiderOwnership": {"Low": "sh_insiderown_low"},
+            "Asset Type": {"Bonds": "etf_assettype_bonds"},
+        }
 
 
 class TestScreenerBasic:
@@ -118,7 +259,7 @@ class TestScreenerTables:
     @pytest.mark.network
     def test_overview_table(self):
         """Overview table should have expected headers."""
-        screener = Screener(filters=["cap_megaover"], table="Overview")
+        screener = Screener(filters=["cap_mega"], table="Overview")
         expected_headers = ["Ticker", "Company", "Sector", "Industry", "Country", "Market Cap"]
         for header in expected_headers:
             assert header in screener.headers, f"Missing header: {header}"
@@ -126,7 +267,7 @@ class TestScreenerTables:
     @pytest.mark.network
     def test_valuation_table(self):
         """Valuation table should have valuation metrics."""
-        screener = Screener(filters=["cap_megaover"], table="Valuation")
+        screener = Screener(filters=["cap_mega"], table="Valuation")
         expected_headers = ["P/E", "P/S", "P/B", "P/FCF"]
         for header in expected_headers:
             assert header in screener.headers, f"Missing header: {header}"
@@ -134,7 +275,7 @@ class TestScreenerTables:
     @pytest.mark.network
     def test_performance_table(self):
         """Performance table should have performance metrics."""
-        screener = Screener(filters=["cap_megaover"], table="Performance")
+        screener = Screener(filters=["cap_mega"], table="Performance")
         expected_headers = ["Perf Week", "Perf Month", "Perf Year"]
         for header in expected_headers:
             assert header in screener.headers, f"Missing header: {header}"
@@ -142,15 +283,15 @@ class TestScreenerTables:
     @pytest.mark.network
     def test_financial_table(self):
         """Financial table should have financial metrics."""
-        screener = Screener(filters=["cap_megaover"], table="Financial")
-        expected_headers = ["ROA", "ROE", "ROI"]
+        screener = Screener(filters=["cap_mega"], table="Financial")
+        expected_headers = ["ROA", "ROE", "ROIC"]
         for header in expected_headers:
             assert header in screener.headers, f"Missing header: {header}"
 
     @pytest.mark.network
     def test_technical_table(self):
         """Technical table should have technical indicators."""
-        screener = Screener(filters=["cap_megaover"], table="Technical")
+        screener = Screener(filters=["cap_mega"], table="Technical")
         expected_headers = ["RSI", "SMA20", "SMA50", "SMA200"]
         for header in expected_headers:
             assert header in screener.headers, f"Missing header: {header}"

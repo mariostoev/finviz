@@ -115,7 +115,7 @@ The Screener allows you to filter stocks based on various criteria. You can eith
 
 - ``Overview`` - Basic company info, market cap, price
 - ``Valuation`` - P/E, P/S, P/B, PEG ratios
-- ``Financial`` - ROA, ROE, ROI, margins
+- ``Financial`` - ROA, ROE, ROIC, margins
 - ``Ownership`` - Insider/institutional ownership, short interest
 - ``Performance`` - Price performance across timeframes
 - ``Technical`` - RSI, SMA, volatility, beta

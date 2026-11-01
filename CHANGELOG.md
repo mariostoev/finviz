@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **`get_stock()`** - Restored `Sector`, `Industry`, and `Country` extraction
+- **`Screener`** - Restored row count, headers, row data, pagination and filter loading after the Finviz screener redesign
+- **`Screener`** - `rows` now returns exactly that many rows instead of filling the last page
+- **`Screener`** - Fixed `request_method="async"`, which crashed on every call
+- **`Screener`** - Finviz blocks requests past row 1000, so larger queries now stop there and warn instead of sending blocked requests
+- **`Screener`** - Warns when Finviz renders fewer custom columns than requested
+- **`get_all_news()`** - Restored date extraction after the news page redesign
 
 ## [2.0.0] - 2025-01-18
 

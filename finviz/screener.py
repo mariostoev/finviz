@@ -1,5 +1,6 @@
 import json
 import pathlib
+import warnings
 from urllib.parse import parse_qs as urlparse_qs
 from urllib.parse import urlencode, urlparse
 
@@ -201,7 +202,7 @@ class Screener(object):
     def __len__(self):
         """ Returns an int with the number of total rows. """
 
-        return int(self._rows)
+        return len(self.data)
 
     def __getitem__(self, position):
         """ Returns a dictionary containing specific row data. """
@@ -259,12 +260,41 @@ class Screener(object):
                     parent = parent.getparent()
                 break
 
-        if filters_table is None:
+        # ETF-only filters are defined on a separate page
+        etf_url = "https://finviz.com/screener/etf?ft=4"
+        etf_response = requests.get(etf_url, headers={"User-Agent": USER_AGENT}, verify=False)
+        etf_response.raise_for_status()
+
+        # Newest structure: the filter definitions are embedded in the page as JSON
+        filter_dict = {}
+        for page in (tree, lxml_html.fromstring(etf_response.text)):
+            for script in page.cssselect("script[data-ssr-props]"):
+                if '"filters":{"filters":[' not in (script.text or ""):
+                    continue
+
+                for filter_def in json.loads(script.text)["filters"]["filters"]:
+                    # Finviz ignores Elite-only filters without an Elite account
+                    if filter_def.get("isEliteOnly"):
+                        continue
+
+                    current_dict = {}
+                    for opt in filter_def.get("options", []):
+                        # Filter out unwanted items
+                        if not opt["value"] or opt.get("isEliteOnly"):
+                            continue
+
+                        current_dict[opt["label"]] = f"{filter_def['key']}_{opt['value']}"
+
+                    if current_dict:
+                        # Long titles wrap with a newline. Drop it to keep the existing names.
+                        filter_name = filter_def["title"]["short"].replace("\n", "")
+                        filter_dict.setdefault(filter_name, current_dict)
+
+        if filters_table is None and not filter_dict:
             raise Exception("Could not locate filter parameters")
 
         # Populate dict with filtering options and corresponding filter tags
-        filter_dict = {}
-        td_list = list(filters_table.iter("td"))
+        td_list = list(filters_table.iter("td")) if filters_table is not None else []
 
         for i in range(0, len(td_list) - 1, 2):
             current_dict = {}
@@ -431,7 +461,29 @@ class Screener(object):
         """ Private function used to return table headers. """
         headers = []
 
-        # Try new structure with <th> elements first
+        # Try the newest structure (div grid) first
+        for header_element in self._page_content.cssselect(
+            'div.fv-table_header-row div[role="columnheader"]'
+        ):
+            label = header_element.cssselect(".fv-table_header-label")
+            header_text = (label[0] if label else header_element).text_content().strip()
+
+            if header_text:
+                headers.append(header_text)
+
+        if headers:
+            # Finviz renders only the columns that fit, so a wide custom table loses the rest
+            grid = self._page_content.cssselect('div.fv-table_viewport[role="grid"]')
+            total_columns = int(grid[0].get("aria-colcount", len(headers))) if grid else len(headers)
+            if total_columns > len(headers):
+                warnings.warn(
+                    f"Finviz returned only {len(headers)} of {total_columns} columns.",
+                    stacklevel=4,
+                )
+
+            return headers
+
+        # Try structure with <th> elements
         header_rows = self._page_content.cssselect('tr[valign="middle"]')
         if not header_rows:
             return headers
@@ -496,5 +548,12 @@ class Screener(object):
         for page in pages_data:
             for row in page:
                 data.append(row)
+
+        # get_table limits rows per page only, so the last page can overshoot
+        data = data[: self._rows]
+
+        if len(data) < self._rows:
+            # Point at the caller's line, not at this package
+            warnings.warn(f"Finviz returned only {len(data)} of {self._rows} rows.", stacklevel=3)
 
         return data

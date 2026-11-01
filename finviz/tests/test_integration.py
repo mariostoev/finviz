@@ -83,7 +83,7 @@ class TestEndToEnd:
         """
         Test that different table types return different data for same filter.
         """
-        filters = ["cap_megaover"]
+        filters = ["cap_mega"]
 
         overview = Screener(filters=filters, table="Overview", rows=5)
         valuation = Screener(filters=filters, table="Valuation", rows=5)
