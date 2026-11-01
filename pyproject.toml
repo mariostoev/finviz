@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "finviz"
-version = "2.0.0"
+version = "2.1.0"
 description = "Unofficial Python API for FinViz - retrieve stock data, screener results, and financial information"
 readme = "README.rst"
 license = {text = "MIT"}
