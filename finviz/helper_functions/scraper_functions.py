@@ -5,11 +5,17 @@ import time
 import requests
 from lxml import etree, html
 
+# Finviz answers screener requests past this row with a 403 challenge
+MAX_SCREENER_ROWS = 1000
+
 
 def get_table(page_html: requests.Response, headers, rows=None, **kwargs):
     """ Private function used to return table data inside a list of dictionaries. """
     if isinstance(page_html, str):
         page_parsed = html.fromstring(page_html)
+    elif isinstance(page_html, html.HtmlElement):
+        # The async connector passes an already parsed page
+        page_parsed = page_html
     else:
         page_parsed = html.fromstring(page_html.text)
     # When we call this method from Portfolio we don't fill the rows argument.
@@ -20,10 +26,22 @@ def get_table(page_html: requests.Response, headers, rows=None, **kwargs):
 
     data_sets = []
     # Select the HTML of the rows and append each column text to a list
-    all_rows = [
-        column.xpath("td//text()")
-        for column in page_parsed.cssselect('tr[valign="top"]')
-    ]
+    all_rows = []
+    for row in page_parsed.cssselect('div.fv-table_row[role="row"]'):
+        all_rows.append(
+            [
+                # The ticker cell also holds a logo placeholder, so use its data attribute
+                cell.get("data-ticker") or cell.text_content().strip()
+                for cell in row.cssselect('div[role="gridcell"]')
+            ]
+        )
+
+    # Fallback to the old table structure
+    if not all_rows:
+        all_rows = [
+            column.xpath("td//text()")
+            for column in page_parsed.cssselect('tr[valign="top"]')
+        ]
 
     # If rows is different from -2, this function is called from Screener
     if rows != -2:
@@ -41,7 +59,7 @@ def get_table(page_html: requests.Response, headers, rows=None, **kwargs):
 def get_total_rows(page_content):
     """ Returns the total number of rows(results). """
 
-    options=[('class="count-text whitespace-nowrap">#1 / ',' Total</div>'),('class="count-text">#1 / ',' Total</td>')]
+    options=[('class="fv-table_toolbar-count">#1 / ',' Total</p>'),('class="count-text whitespace-nowrap">#1 / ',' Total</div>'),('class="count-text">#1 / ',' Total</td>')]
     page_text = str(html.tostring(page_content))
     for option_beg,option_end in options:
         if option_beg in page_text:
@@ -56,15 +74,23 @@ def get_total_rows(page_content):
 def get_page_urls(page_content, rows, url):
     """ Returns a list containing all of the page URL addresses. """
 
-    total_pages = int(
-        [i.text.split("/")[1] for i in page_content.cssselect('option[value="1"]')][0]
-    )
+    page_labels = [
+        i.text for i in page_content.cssselect('button[aria-label="Page"] .select-trigger_label')
+    ]
+    if page_labels:
+        total_pages = int(page_labels[0].split("/")[1])
+    elif page_content.cssselect('option[value="1"]'):
+        total_pages = int(
+            [i.text.split("/")[1] for i in page_content.cssselect('option[value="1"]')][0]
+        )
+    else:
+        total_pages = 1  # No pager is shown when all results fit in one page
     urls = []
 
     for page_number in range(1, total_pages + 1):
         sequence = 1 + (page_number - 1) * 20
 
-        if sequence - 20 <= rows < sequence:
+        if sequence - 20 <= rows < sequence or sequence > MAX_SCREENER_ROWS:
             break
         urls.append(url + f"&r={str(sequence)}")
 
